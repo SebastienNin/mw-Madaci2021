@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>mw-routine</title>
+  <meta name="description" content="mw-routine" />
+  <meta name="generator" content="bookdown 0.20 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="mw-routine" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="mw-routine" />
+  
+  
+  
+
+<meta name="author" content="Guillaume Charbonnier and Sebastien Nin" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+
+
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path="index.html"><a href="#sequencing_summary.xlsx-description"><i class="fa fa-check"></i><b>1</b> Sequencing_summary.xlsx description</a><ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="#samples-sheet"><i class="fa fa-check"></i><b>1.1</b> <em>samples</em> sheet</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="index.html"><a href="#faq"><i class="fa fa-check"></i><b>2</b> FAQ</a><ul>
+<li class="chapter" data-level="2.1" data-path="index.html"><a href="#activerréparer-la-validation-des-données-et-menus-déroulants"><i class="fa fa-check"></i><b>2.1</b> Activer/Réparer la validation des données et menus déroulants</a></li>
+<li class="chapter" data-level="2.2" data-path="index.html"><a href="#how-to-edit-this-docs"><i class="fa fa-check"></i><b>2.2</b> How to edit this docs?</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">mw-routine</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="header">
+<h1 class="title">mw-routine</h1>
+<p class="author"><em><a href="https://guillaumecharbonnier.github.io/">Guillaume Charbonnier</a> and <a href="https://www.linkedin.com/in/s%C3%A9bastien-nin-280954a5/">Sebastien Nin</a></em></p>
+<p class="date"><em>15 January, 2021</em></p>
+</div>
+<p>Welcome to the Metaworkflow documentation for routine processing. It will help you to correctly use the <code>sequencing_summary.xlsx</code> spreadsheet to work with the Snakemake workflow deployed on Sacapus. Note this workflow is developed in parallel for <em>TGML users</em> and <em>Salvatore Spiculglia's Team</em>. Instructions specific to one or the other team are prefixed like this:</p>
+<ul>
+<li><em>TGML</em>: You can find the Sequencing_summary.xlsx file on netapp1 in the TGML folder.</li>
+<li><em>SST</em>: You can find the Sequencing_summary.xlsx file on Dropbox in the <code>/Commun Labo/Sequencing_TGML/Sequencing_summary.xlsx</code>. Please use Google Sheets to edit this file to avoid concurrency and compatibility issues. You can still read it while offline using Excel, LibreOffice or other tools.</li>
+</ul>
+<div id="sequencing_summary.xlsx-description" class="section level1">
+<h1><span class="header-section-number">1</span> Sequencing_summary.xlsx description</h1>
+<p>As a general rule, please avoid the use of the space ' ' when manually filling the Sequencing summary.</p>
+<div id="samples-sheet" class="section level2">
+<h2><span class="header-section-number">1.1</span> <em>samples</em> sheet</h2>
+<p>Stores metadata related to a specific sample. It is currently the only table used by the workflow but this may change in the future.</p>
+<ul>
+<li><code>idx</code> : Index used to restore table to chronological state after ordering by other columns.</li>
+<li><code>sample_name</code> : The name of the prefix for the files after processing. As such, special characters like <strong>spaces, '/' and '()' should be avoided</strong> in this field. Also, all <code>sample_name</code> cells also have to be <strong>unique</strong> since some sample-related files have to be stored in common folders.
+<ul>
+<li><em>TGML</em>: You should not manually edit this column because <code>sample_name</code> consists of the automatic concatenation of <code>Sample_ID</code> and <code>Sample_name</code> separated by a &quot;_&quot;.</li>
+<li><em>SST</em>: You can manually adjust the <code>sample_name</code> column.</li>
+</ul></li>
+<li><code>control_name</code> : <code>sample_name</code> of control to use for ratio coverage and peak calling. Leave empty if control is irrelevant for sample.</li>
+<li><code>quantile_normalization_name</code> : sample_name used as a reference for quantile normalization of bigwig.</li>
+<li><code>warning</code> : A manual warning any user interested in the related sample should know before going further.</li>
+<li><code>process</code> : Can take either <code>yes</code>, <code>done</code> or <code>no</code> value. In the routine usage, you should set <code>yes</code> when you need to process newly defined files, then switch them to <code>done</code> when all the processed files are available. Doing so reduces the computation time of the first part of workflow execution (DAG generation), so it is optional until someone has to debug the workflow. You can set <code>no</code> value when a sample definition is incomplete or leads to error. In this case, please fill the <code>warning</code> cell to informs other users of your reason.
+<ul>
+<li><code>yes</code> value means the sample configuration will be loaded by Snakemake and the related files will be produced.</li>
+<li><code>done</code> value means the sample configuration will be loaded by Snakemake but the related files are not explicitly produced, meaning they will still be produced if required for another sample with <code>yes</code> value.</li>
+<li><code>no</code> value, or empty cell, means the the line is not loaded by Snakemake.</li>
+</ul></li>
+<li><code>type</code> : Define the type of sample. The possible choices are listed in the <code>data_validation_lists</code> sheet of the <code>sequencing_summary.xlsx</code> file. This value will set the default processing steps applied to the input files for this sample. The value is also used as directory for processed files in some subtrees. Here are some instructions for specific library type.
+<ul>
+<li><code>combo-seq</code> only informational for now. As the project is closed, It may stay like this for a long time...</li>
+<li><code>scRNA</code> processing of bcl from scRNA-seq experiment. It can also process cell hashing experiments! When selecting scRNA, put the origin to 'bcl' and do not forget to specify the X column 'Index_10X'.</li>
+<li>For all other <code>type</code> don't forget to check if you need fastq or bcl as input and to accord the origin and accession depending on your input.</li>
+</ul></li>
+<li><em>TGML</em>: <code>analysis_type</code> : Adjust the type of analyses to run. The possible choices are listed in the <code>data_validation_lists</code> sheet.
+<ul>
+<li><code>Concatenation_QC</code>: Use fastq files from the sequencer as input (check), produce concatenated fastq files and multiqc report. <strong>When you want to run this analysis, put the origin column to &quot;NS500_W10&quot; and make the accession point to the fastq folder created by the sequencer (located in <code>/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_folder/Alignment_1/Run_date/Fastq</code>).</strong></li>
+<li><code>Demultiplexage_Concatenation_QC</code> Use bcl folder as input, run the sample demultiplexing, fastq file concatenation and multiqc report. When running this analysis, put the origin to bcl and make the accession point to the bcl folder of the run (located in <code>/gpfs/tgml/reads/NS500_output_from_sept_2020/</code>).</li>
+<li><code>Demultiplexage_Concatenation_Quantification_QC</code> Use bcl folder as input, run the sample demultiplexing, fastq file concatenation, count table generation (for single-cell only for now), generate also the multiqc report. For now, put the origin to bcl and make the accession point to bcl folder of a run. Later, I'll add the possibility to process fastq file from sequencer.</li>
+</ul></li>
+<li><code>specie</code> : human;mouse. We can require for each specie the common assemblies (hg19/hg38; mm9/mm10) for which files will be generated. Or maybe replace this column with an assembly one where we explicitely ask the wanted assemblies.</li>
+<li><code>se_or_pe</code> : se for single-end reads; pe for paired-end reads. If you only see &quot;_R1_&quot; file for each sample, you are likely to have single-end reads.</li>
+<li><code>origin</code> : This value indicates the meaning of the <code>accession</code> next column
+<ul>
+<li><em>TMGL</em>:
+<ul>
+<li><code>bcl</code>: the accession will correspond to bcl folder of a run.</li>
+<li><code>bcl_no_mismatch</code>: Select this if the samples must be demultiplexed without allowing barcode mismatches. <strong>Use only</strong> to resolve demultiplexing when the number of differences between barcodes is smaller than 2)</li>
+<li><code>NextSeq500</code>: Use this one to process fastq files generated by the sequencer <strong>before</strong> the Windows 10 update.</li>
+<li><code>NS500_W10</code>: Use this one to process fastq file generated by the sequencer <strong>after</strong> the Windows 10 update</li>
+<li><strong>Do not use the following:</strong> <code>bcl_NextSeq500</code>, <code>blueprint</code>, <code>merged_bam</code>, <code>merged_fastq</code>, <code>mirna_bcl</code>, <code>scrna_bcl</code>, <code>sra</code>, <code>tgml</code>. They are not used by the platform.</li>
+</ul></li>
+<li><em>SST</em>:
+<ul>
+<li><code>tgml</code> : Legacy argument for Salva team only. Should be the TGML fastq prefix, relative to /gpfs/projects/spicuglia/. Should not include the <code>_L001_R1_001</code> part. Here is an example of how you can get a list of prefixes ready to paste in this column. On sacapus : <code>cd /gpfs/projects/spicuglia/mw; find inp/fastq/run233/ -name '\*\_L001\_R1\_001.fastq.gz' | sed 's/\_L001\_R1\_001.fastq.gz//'</code></li>
+<li><code>sra</code> : Should be a SRR id for the sample.</li>
+<li><code>NextSeq500</code> : Should be the absolute prefix to fastq files produced by the NextSeq500 platform.</li>
+<li><code>merge_fastq</code> : Should be comma-separated list of <code>sample_name</code> that need to be merged.</li>
+<li>TODO GC: add explanations for other accession values here</li>
+</ul></li>
+</ul></li>
+<li><code>run</code>, <code>exp</code>, <code>project</code>, <code>customer</code>, <code>cell_type</code>, <code>chip_target</code> : These columns contains optional metadata used to organize produced files in different subtrees.</li>
+</ul>
+</div>
+</div>
+<div id="faq" class="section level1">
+<h1><span class="header-section-number">2</span> FAQ</h1>
+<div id="activerréparer-la-validation-des-données-et-menus-déroulants" class="section level2">
+<h2><span class="header-section-number">2.1</span> Activer/Réparer la validation des données et menus déroulants</h2>
+<ol style="list-style-type: decimal">
+<li>Sélectionner la colonne à valider</li>
+<li>Menu Données &gt; Validation des données</li>
+<li>Choisir la sélection à partir du plage</li>
+<li>Aller dans le feuillet data_validation_lists</li>
+<li>Sélectionner la colonne corrrespondant aux valeurs correctes.</li>
+<li>Si c'est la colonne N qui est sélectionnée, ajuster le &quot;N:N&quot; en &quot;N2:N&quot; pour ne pas que l'entête puisse être un choix.</li>
+<li>Retourner dans le feuillet 'samples'. Normalement ça marche.</li>
+<li>Optionnellement retirer la validation de la cellule d'entête pour ne pas avoir le message d'avertissement. &quot;</li>
+</ol>
+</div>
+<div id="how-to-edit-this-docs" class="section level2">
+<h2><span class="header-section-number">2.2</span> How to edit this docs?</h2>
+<p>The rmarkdown files are in the &quot;src/rmd&quot; folder in this repository. You can edit it directly from github from this link if you have write access to the repository: <a href="https://github.com/guillaumecharbonnier/mw-sst/tree/master/src/rmd" class="uri">https://github.com/guillaumecharbonnier/mw-sst/tree/master/src/rmd</a></p>
+<ol style="list-style-type: decimal">
+<li>Edit the markown files.</li>
+<li>In R, <code>bookdown::render_book('index.Rmd')</code></li>
+<li>git commit and push changes in docs directory.</li>
+</ol>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+</body>
+
+</html>

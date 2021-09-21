@@ -1,0 +1,6 @@
+# Script to execute by all users who have files in this directory.
+echo "Fixing permissions for $USER"
+# Looking for /gpfs/projects/spicuglia/* and not /gpfs/projects/spicuglia because we want to preserve no rwx for other for spicuglia directory.
+# We want rx for other for subdirectories because else Salva sshfs mount point on his Mac can not access these directories.
+find /gpfs/projects/spicuglia/* -user $USER -type d -exec chmod 775 {} \; -exec chgrp thymus {} \; -exec chmod g+s {} \; -exec setfacl -d -m g::rwx {} \; -exec setfacl -d -m u::rwx {} \; -exec setfacl -d -m o::rx {} \; 
+find /gpfs/projects/spicuglia/* -user $USER -type f -exec chmod u+rw,g+rw,o+r {} \; -exec chgrp thymus {} \;
