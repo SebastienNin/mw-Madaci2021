@@ -1,0 +1,10 @@
+out/cellranger/count_--sample_FLT3_R252/cellanger/mkfastq//gpfs/tgml/reads/bcl/Run_252_190329_NS500637_0159_AHYGNKBGX9/Run_252_NS500-159_29_03_2019_RC/process_done
+out/cellranger/count_--sample_CBF_R252/cellanger/mkfastq//gpfs/tgml/reads/bcl/Run_252_190329_NS500637_0159_AHYGNKBGX9/Run_252_NS500-159_29_03_2019_RC/process_done
+out/cellranger/count_--sample_CBF_R255_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/bcl/Run_255_190408_NS500637_0162_AH7K2JBGXB/Run_255_NS500-162_08_04_2019_RC/process_done
+out/cellranger/count_--sample_mRNA_Hashtag_R306_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/bcl/Run_306_200214_NS500637_0213_AH23C3BGXF/Run_306_NS500-213_14_02_2020_CG
+out/cellranger/count_--sample_HTO_Hashtag_R306_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/bcl/Run_306_200214_NS500637_0213_AH23C3BGXF/Run_306_NS500-213_14_02_2020_CG
+out/cellranger/count_--sample_mRNA_Hashtag_R309_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/bcl/Run_309_200224_NS500637_0216_AH2J22BGXF/Run_309_NS500-216_24_02_2020_CG/process_done
+out/cellranger/count_--sample_HTO_Hashtag_R309_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/bcl/Run_309_200224_NS500637_0216_AH2J22BGXF/Run_309_NS500-216_24_02_2020_CG/process_done
+out/cellranger/count_--sample_P13_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_372_NS500-280_17-05-2021_RC/process_done
+out/cellranger/count_--sample_P8_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_372_NS500-280_17-05-2021_RC/process_done
+out/cellranger/count_--sample_3_P8bis_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_378_NS500-286_06-07-2021_RC/process_done
