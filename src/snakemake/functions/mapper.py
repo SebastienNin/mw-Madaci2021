@@ -1,11 +1,11 @@
 #if not os.path.isfile("../mw-sst/Sequencing_summary.csv"):
-if not os.path.isfile("../mw-sst/Sequencing_summary.xlsx"):
+if not os.path.isfile("../mw-Madaci2021/Sequencing_summary.xlsx"):
     #eprint('No Sequencing_summary.xlsx')
     mwconf['targets'] = []
     mwconf['bcl2fastq_targets'] = []
     mwconf['qc_targets'] = []
 else:
-    samples = pandas.read_excel("../mw-sst/Sequencing_summary.xlsx", sheet_name="samples", engine='openpyxl')
+    samples = pandas.read_excel("../mw-Madaci2021/Sequencing_summary.xlsx", sheet_name="samples", engine='openpyxl')
     #genomes = pandas.read_excel("../mw-sst/Sequencing_summary.xlsx", sheet_name="genomes")
     #samples = pandas.read_csv("../mw-sst/Sequencing_summary.csv")
     samples.type.fillna("Unknown", inplace=True)
@@ -746,10 +746,8 @@ else:
     for scRNA_project in scRNA_samples:
         project_samples = samples[(samples['process'].isin(['yes','done'])) & (samples['Sample_Project'] == scRNA_project)]
 
-        #print(project_samples)
-
         # Run cellranger count on cellranger mkfastq output
-        if project_samples['analysis_type'].all() in ['Demultiplexage_Concatenation_Quantification_QC']:
+        if project_samples['analysis_type'].unique() in ['Demultiplexage_Concatenation_Quantification_QC']:
             # Loop on sample to run cellranger count on each sample
             SAMPLES = project_samples['Sample_Name']
             #print(SAMPLES)
@@ -757,7 +755,6 @@ else:
             samples_to_protect = []
             for SAMPLE in SAMPLES:
                 samples_to_protect.append(SAMPLE)
-                #print(SAMPLE)
                 SPECIE = str(project_samples['specie'].unique()[0])
                 ACCESSION = str(project_samples['accession'].unique()[0])
                 PROCESS = str(project_samples['process'].unique()[0])
@@ -784,7 +781,6 @@ else:
             # Add the protected_underscore_line to the scRNA_protectedunderscores.tsv file, which is created on each scRNA-seq processing.
             # 07-07-2021: doesn't work when multiple scRNA are processed.
             if(str(project_samples['process'].unique()[0]) == 'yes'):
-                #print(protected_underscore_line)
                 protected_underscore_line = protected_underscore_line + ",".join(samples_to_protect)
                 #print(protected_underscore_line)
                 protected_underscore_file = open("out/mw/Run_" + RUN  + "_protectedunderscores.tsv", 'w')

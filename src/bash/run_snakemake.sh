@@ -10,11 +10,18 @@ conda env create -f $SM_DIR/../mw-lib/src/snakemake/envs/snakemake.yaml
 #conda env create -f $SM_DIR/src/snakemake/envs/r_rmd_sarcoma.yaml
 
 # 3. Find Snakemake targets in the Rmd files
-TARGET=`grep '^out/cellranger <- "' $RMD_DIR/*.Rmd` 
-echo $SMI
+MKFASTQ_TARGETS=`grep '^out/cellranger/mkfastq' $RMD_DIR/targets.Rmd`
+#echo $MKFASTQ_TARGETS
+
+COUNT_TARGETS=`grep '^out/cellranger/count' $RMD_DIR/targets.Rmd`
+#echo $COUNT_TARGETS
 
 # 4. Run Snakemake on all targets in the Rmd files
 eval "$(conda shell.bash hook)"
 conda activate snakemake
 cd $SM_DIR
-snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 $TARGETS
+echo $PWD
+snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 $MKFASTQ_TARGETS
+snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 $COUNT_TARGETS
+#snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 config_blc2fastq_targets
+#snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 config_targets

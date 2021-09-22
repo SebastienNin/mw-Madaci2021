@@ -15,9 +15,9 @@ import numpy as np
 import hashlib
 from pathlib import Path
 
-if os.path.isfile("../mw-sst/Sequencing_summary.xlsx"):
+if os.path.isfile("../mw-Madaci2021/Sequencing_summary.xlsx"):
     #def make_sample_sheets_from_sequencing_summary(seq_sum_path:
-    samples = pandas.read_excel("../mw-sst/Sequencing_summary.xlsx", sheet_name="samples", engine="openpyxl")
+    samples = pandas.read_excel("../mw-Madaci2021/Sequencing_summary.xlsx", sheet_name="samples", engine="openpyxl")
     # Old line to get only line with bcl_Nextseq500 origin
     #samples_from_bcl = samples[samples['origin'] == 'bcl_NextSeq500']
     #samples_from_bcl = samples[samples['origin'] in ['bcl', 'bcl_no_mismatch']]
