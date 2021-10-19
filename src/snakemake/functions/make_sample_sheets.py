@@ -69,7 +69,7 @@ if os.path.isfile("../mw-Madaci2021/Sequencing_summary.xlsx"):
             #bcl2fastq_target = "out/cellranger/mkfastq/" + experiment + "/Run_" + str(int(current_df[['run']].iloc[0,0])) + "/outs/fastq_path/" + str(current_df[['Sample_Project']].iloc[0,0])  + "/Reports/html/tree.html"
             bcl2fastq_prefix = "out/cellranger/mkfastq/" + experiment
             bcl2fastq_target = bcl2fastq_prefix + "/Reports/html/tree.html"
-            data_tmp = current_df[['Sample_ID','Sample_Name','Sample_Plate','Sample_Well','Index_10X','I7_Index_ID','index', 'I5_Index_ID', 'index2', 'Sample_Project','Description']]
+            data_tmp = current_df[['Sample_ID','Sample_Name','Sample_Plate','Sample_Well','Index_10X','I7_Index_ID','index', 'I5_Index_ID', 'index2', 'Sample_Project','Description']].fillna('')
             # 2021 04 07 Update to enable dual indexing demultiplexing. Cellranger can read index name and will replace it by the index sequence. It also detect dual index or single index.
             # 2021-04-23 Update the conditions to detect if samples have double index or not.
             for index, row in data_tmp.iterrows():
@@ -77,13 +77,15 @@ if os.path.isfile("../mw-Madaci2021/Sequencing_summary.xlsx"):
                     mRNA_index=index
                     index_name=row["I7_Index_ID"]
                     data_tmp.at[mRNA_index, "index"] = index_name
-                    if(str(row['I5_Index_ID']) != "nan"):
+                    if(str(row['I5_Index_ID']) != ''):
                         data_tmp.at[mRNA_index, "I5_Index_ID"] = index_name
                         data_tmp.at[mRNA_index, "index2"] = index_name
                         data_dropped = data_tmp.drop(columns=["Index_10X"])
                     else:
                         data_dropped = data_tmp.drop(columns=["Index_10X", "I5_Index_ID", "index2"])
                 #data_dropped = data_tmp.drop(columns=["Index_10X"])
+                elif(str(row['I5_Index_ID']) == ''):
+                    data_dropped = data_tmp.drop(columns=["Index_10X", "I5_Index_ID", "index2"])
                 else:
                     data_dropped = data_tmp.drop(columns=["Index_10X"])
             data = data_dropped
@@ -150,7 +152,7 @@ if os.path.isfile("../mw-Madaci2021/Sequencing_summary.xlsx"):
             adapter_content=("\n"
             '[Data]\n')
         if current_df[['process']].iloc[0,0] == "yes":
-            myfile = open(tmp_filename, 'w')
+            myfile = open(filename, 'w')
             myfile.write(header)
             myfile.write(adapter_content)
             myfile.write(data.to_csv(index=False))
@@ -158,22 +160,22 @@ if os.path.isfile("../mw-Madaci2021/Sequencing_summary.xlsx"):
 
             #print(str(os.path.isfile(filename)) + " SampleSheet.csv " + filename)
             #print(str(os.path.isfile(tmp_filename)) + " SampleSheet.csv.tmp " + tmp_filename )
-            if(os.path.isfile(filename)):
+            #if(os.path.isfile(filename)):
                 #print(hashlib.md5(open(filename,'rb').read()).hexdigest())
                 #print(hashlib.md5(open(tmp_filename,'rb').read()).hexdigest())
                 #print(hashlib.md5(open(filename,'rb').read()).hexdigest() == hashlib.md5(open(tmp_filename,'rb').read()).hexdigest())
                 #print(hashlib.md5(open(filename,'rb').read()).hexdigest() != hashlib.md5(open(tmp_filename,'rb').read()).hexdigest())
-                if(hashlib.md5(open(filename,'rb').read()).hexdigest() != hashlib.md5(open(tmp_filename,'rb').read()).hexdigest()):
-                    os.replace(filename, tmp_filename)
+                #if(hashlib.md5(open(filename,'rb').read()).hexdigest() != hashlib.md5(open(tmp_filename,'rb').read()).hexdigest()):
+                    #os.replace(filename, tmp_filename)
                 #else:
                     #if(os.path.isfile(tmp_filename)):
                         #print(tmp_filename)
                         #print(os.path.isfile(tmp_filename))
                         #os.remove(tmp_filename)
 
-            else:
-                if(os.path.isfile(tmp_filename)):
-                    os.rename(tmp_filename, filename)
+            #else:
+                #if(os.path.isfile(tmp_filename)):
+                    #os.rename(tmp_filename, filename)
 
     # Output line before the no lane splitting option
         #bcl2fastq_target = "out/bcl2fastq/_/" + experiment + "/Reports/html/tree.html"

@@ -17,12 +17,16 @@ MKFASTQ_TARGETS=`grep '^out/cellranger/mkfastq' $TARGET_DIR/targets.txt`
 COUNT_TARGETS=`grep '^out/cellranger/count' $TARGET_DIR/targets.txt`
 #echo $COUNT_TARGETS
 
+CITE_SEQ_TARGETS=`grep '^out/cite-seq_count' $TARGET_DIR/targets.txt`
+#echo $CITE_SEQ_TARGETS
+
 # 4. Run Snakemake on all targets in the Rmd files
 eval "$(conda shell.bash hook)"
 conda activate snakemake
 cd $SM_DIR
-echo $PWD
-snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 $MKFASTQ_TARGETS
-snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 $COUNT_TARGETS
-#snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 config_blc2fastq_targets
-#snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 config_targets
+#echo $PWD
+#snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 $MKFASTQ_TARGETS
+#snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 $COUNT_TARGETS
+#snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 $CITE_SEQ_TARGETS
+snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 config_blc2fastq_targets
+snakemake -prk --rerun-incomplete --cores 16 --resources wget_limit=2 conda_token=1 --cluster "qsub -V -q lifescope -o log/qsub -e log/qsub -l nodes=1:ppn={threads},walltime=99:00:00" --use-conda --max-jobs-per-second 3 config_targets

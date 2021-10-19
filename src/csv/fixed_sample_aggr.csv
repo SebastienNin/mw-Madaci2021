@@ -1,0 +1,5 @@
+sample_id,molecule_h5,cellstatus
+P8_ARNm,out/cellranger/count_--sample_P8_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_372_NS500-280_17-05-2021_RC/Run_372/outs/molecule_info.h5,fixed
+P13_ARNm,out/cellranger/count_--sample_P13_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_372_NS500-280_17-05-2021_RC/Run_372/outs/molecule_info.h5,fixed
+mRNA_Hashtag_R342,out/cellranger/count_--sample_mRNA_Hashtag_R342_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_342_NS500-249_11-12-2020_LM/Run_342/outs/molecule_info.h5,cellhashing
+
