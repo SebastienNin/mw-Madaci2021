@@ -16,3 +16,6 @@ out/cellranger/count_--sample_HTO_Hashtag_R309_GRCh38-2020-A/cellranger/mkfastq/
 out/cellranger/count_--sample_P13_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_372_NS500-280_17-05-2021_RC/process_done
 out/cellranger/count_--sample_P8_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_372_NS500-280_17-05-2021_RC/process_done
 out/cellranger/count_--sample_3_P8bis_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_378_NS500-286_06-07-2021_RC/process_done
+
+out/cite-seq_count/_-cbf_1_-cbl_16_-umif_17_-umil_28_--expected_cells_10000_-o_Results_HTO/cat/merge-nexsteq500-pe/S003718_19_3_HTO_Hashtag_R306/run_report.yaml
+out/cite-seq_count/_-cbf_1_-cbl_16_-umif_17_-umil_28_--expected_cells_10000_-o_Results_HTO/cat/merge-nexsteq500-pe/S003718_19_1_HTO_Hashtag_R309/run_report.yaml

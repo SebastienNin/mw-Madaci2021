@@ -44,7 +44,7 @@ else:
             SE_OR_PE = str(row['se_or_pe'])
             SAMPLE_NAME = str(row['sample_name'])
             EXP = str(row['exp'])
-            PROJECT = str(row['project'])
+            PROJECT = str(row['Sample_Project'])
             CELL_TYPE = str(row['cell_type'])
             CUSTOMER = str(row['customer'])
             ACCESSION = str(row['accession'])
@@ -178,30 +178,18 @@ else:
                     fq_to_rename_2 = "out/cat/" + id_cat_2
 
             # Add case for bcl_no_split_lane
-            elif(str(row['origin']) in ['bcl', 'bcl_no_mismatch', 'bcl_index_generation'] and str(row['type']) not in ['scRNA', 'scRNA_HTO']):
+            elif(str(row['origin']) in ['bcl', 'bcl_no_mismatch'] and str(row['type']) not in ['scRNA', 'scRNA_HTO']):
                 # Add /_/ after out/bcl2fastq and to prevent decimal in the sample Well, add int() in the str conversion to first convert into int then into str
                 if(str(row['origin']) == 'bcl'):
                     bcl_prefix = "out/bcl2fastq/_--no-lane-splitting/" + ACCESSION + "/" + str(row['Sample_Project']) + "/" + str(row["Sample_ID"]) + "/" + str(row["Sample_Name"]) + "_S" + str(int(row["Sample_Well"]))
-                elif(str(row['origin']) == 'bcl_index_generation'):
-                    bcl_prefix = "out/bcl2fastq/_--no-lane-splitting_--create-fastq-for-index-reads/" + ACCESSION + "/" + str(row['Sample_Project']) + "/" + str(row["Sample_ID"]) + "/" + str(row["Sample_Name"]) + "_S" + str(int(row["Sample_Well"]))
-                    #bcl_prefix = "out/bcl2fastq/_--no-lane-splitting_--create-fastq-for-index-reads_--ignore-missing-bcls/" + ACCESSION + "/" + str(row['Sample_Project']) + "/" + str(row["Sample_ID"]) + "/" + str(row["Sample_Name"]) + "_S" + str(int(row["Sample_Well"]))
                 else:
                     bcl_prefix = "out/bcl2fastq/_--no-lane-splitting_--barcode-mismatches_0/" + ACCESSION + "/" + str(row['Sample_Project']) + "/" + str(row["Sample_ID"]) + "/" + str(row["Sample_Name"]) + "_S" + str(int(row["Sample_Well"]))
                 bcl_prefix = bcl_prefix.replace('//','/')
-                #print(bcl_prefix)
-                #print(bcl_prefix + "_R1_001.fastq.gz")
                 if SE_OR_PE == 'se':
                     fq_to_rename = bcl_prefix + "_R1_001.fastq.gz"
                 elif SE_OR_PE == 'pe':
                     fq_to_rename_1 = bcl_prefix + "_R1_001.fastq.gz"
                     fq_to_rename_2 = bcl_prefix + "_R2_001.fastq.gz"
-                    #id_cat_1 = "merge-nexsteq500-pe/" + SAMPLE_NAME + '_1.fastq.gz'
-                    #id_cat_2 = "merge-nexsteq500-pe/" + SAMPLE_NAME + '_2.fastq.gz'
-                    #fq_to_cat_1 = "out/ln/alias/sst/all_samples/fastq/" + SAMPLE_NAME + "_1.fastq.gz"
-                    #fq_to_cat_2 = "out/ln/alias/sst/all_samples/fastq/" + SAMPLE_NAME + "_2.fastq.gz"
-                    #mwconf['ids'][id_cat_1] = str(fq_to_cat_1)
-                    #mwconf['ids'][id_cat_2] = str(fq_to_cat_2)
-
 
             # Add case for scrna_bcl
             elif(str(row['origin']) == 'bcl' and str(row['type']) in ['scRNA', 'scRNA_HTO']):
@@ -276,6 +264,29 @@ else:
                     mwconf['ids'][concat_sample_2] = samples_to_cat_2
                     fq_to_rename_1 = "out/cat/merge-fastq-samples/" + SAMPLE_NAME + "_1.fastq.gz"
                     fq_to_rename_2 = "out/cat/merge-fastq-samples/" + SAMPLE_NAME + "_2.fastq.gz"
+            
+            elif str(row['origin']) == 'subsample_fastq':
+                SUBSAMPLE_ARGS = ACCESSION.split(",")
+                SAMPLE=SUBSAMPLE_ARGS.pop(0)
+                N_READS_OR_FRACTION = SUBSAMPLE_ARGS.pop(0)
+                if len(SUBSAMPLE_ARGS) == 0:
+                    SUBSAMPLE_SEED="123"
+                else:
+                    SUBSAMPLE_SEED = SUBSAMPLE_ARGS.pop(0)
+                
+                fq_to_rename_prefix = "out/seqtk/sample_-s_" + \
+                    SUBSAMPLE_SEED + \
+                    "_" + \
+                    N_READS_OR_FRACTION + \
+                    "/ln/alias/sst/all_samples/fastq/" + \
+                    SAMPLE
+
+                if SE_OR_PE == 'se':
+                    fq_to_rename = fq_to_rename_prefix + ".fastq.gz"
+                
+                elif SE_OR_PE == 'pe':
+                    fq_to_rename_1 = fq_to_rename_prefix + "_1.fastq.gz"
+                    fq_to_rename_2 = fq_to_rename_prefix + "_2.fastq.gz"
 
             # 1)
             # (2
@@ -313,9 +324,11 @@ else:
                     mwconf['ids'][fq_suffix_2] = fq_to_rename_2
                     fq_path_1 = "out/ln/alias/" + fq_suffix_1
                     fq_path_2 = "out/ln/alias/" + fq_suffix_2
+
                     if PROCESS == 'yes':
                         mwconf['targets'].append(fq_path_1)
                         mwconf['targets'].append(fq_path_2)
+            
             # 2)
 
             # (3
@@ -741,13 +754,14 @@ else:
 
             # First, merge all fastq from scRNA. Should only merge mRNA data. HTO data are processed later.
 
-    #scRNA_samples = samples[(samples['process'].isin(['yes','done'])) & samples['type'] == 'scRNA'].Sample_Project.unique()
     scRNA_samples = samples[(samples['process'].isin(['yes','done'])) & (samples['type'] == 'scRNA')].Sample_Project.unique()
     for scRNA_project in scRNA_samples:
         project_samples = samples[(samples['process'].isin(['yes','done'])) & (samples['Sample_Project'] == scRNA_project)]
 
+        #print(project_samples)
+
         # Run cellranger count on cellranger mkfastq output
-        if project_samples['analysis_type'].unique() in ['Demultiplexage_Concatenation_Quantification_QC']:
+        if project_samples['analysis_type'].all() in ['Demultiplexage_Concatenation_Quantification_QC']:
             # Loop on sample to run cellranger count on each sample
             SAMPLES = project_samples['Sample_Name']
             #print(SAMPLES)
@@ -755,6 +769,7 @@ else:
             samples_to_protect = []
             for SAMPLE in SAMPLES:
                 samples_to_protect.append(SAMPLE)
+                #print(SAMPLE)
                 SPECIE = str(project_samples['specie'].unique()[0])
                 ACCESSION = str(project_samples['accession'].unique()[0])
                 PROCESS = str(project_samples['process'].unique()[0])
@@ -781,6 +796,7 @@ else:
             # Add the protected_underscore_line to the scRNA_protectedunderscores.tsv file, which is created on each scRNA-seq processing.
             # 07-07-2021: doesn't work when multiple scRNA are processed.
             if(str(project_samples['process'].unique()[0]) == 'yes'):
+                #print(protected_underscore_line)
                 protected_underscore_line = protected_underscore_line + ",".join(samples_to_protect)
                 #print(protected_underscore_line)
                 protected_underscore_file = open("out/mw/Run_" + RUN  + "_protectedunderscores.tsv", 'w')
@@ -790,12 +806,12 @@ else:
                 protected_underscore_file.write("\n")
                 protected_underscore_file.close()
 
-
-            
             # 2021-07-05: Add CITE-seq and cellhashing processing
             ADT = list(project_samples['ADT_information'])
             HTO = list(project_samples['HTO_information'])
             SCRNA_KIT = str(project_samples['Kit_barcode_scRNA'].unique()[0])
+
+            #print(SCRNA_KIT)
 
             # Identify data where HTO or ADT are presents
             # Naive search of the letter A in string. Maybe find an other way to do it.
@@ -825,35 +841,50 @@ else:
 
                     # Get the line where HTO information is present
                     res = [i for i, val in enumerate(eval(info_joined)) if val]
-                    #print(res)
+
+                    # Get the sample name corresponding to HTO or ADT
+                    #print(project_samples)
+                    #print(project_samples["sample_name"])
+
+                    T_INDEX = list(project_samples["T"])[res[0]]
+                    #print(T_INDEX)
+                    project_samples[project_samples["T"]==T_INDEX].index.item()
+                    #SAMPLE_NAME_INDEX = project_samples["sample_name"][T_INDEX]
+                    SAMPLE_NAME = project_samples["sample_name"][project_samples["T"]==T_INDEX]
+
+                    #print(project_samples)
+                    # 30/09/2021: Sebastiennin
+                    # I need to find an other way to do it.
+                    # It should be better to get the cell barcodes list from cellranger count here, but I can't find a way to do it...
+                    EXPECTED_CELL = project_samples["Expected_cell_number"][project_samples["T"]==T_INDEX]
+                    
+                    if(EXPECTED_CELL.isnull().values.any()):
+                        print("NaN value in Expected_cell_number column, if processing of Citeseq is needed, please change this value.")
+                        continue
+                    else:
+                        EXPECTED_CELL = str(int(EXPECTED_CELL))
+                    #print(SAMPLE_NAME_INDEX)
+                    #print(project_samples["sample_name"].loc(project_samples[SAMPLE_NAME_INDEX]))
+                    #print(project_samples["sample_name"][SAMPLE_NAME_INDEX])
 
                     # Get output folder name
                     # Barcode sequences are different depending on the kit.
                     # TotalSeq A have the Barcode sequence on the first position of the read, whereas TotalseqB having Barcode sequence beginning after the 10 first nucleotides
                     # print(info_df.Kit_barcode_scRNA)
+                    
                     if(SCRNA_KIT == "Total_seq_A"):
-                        citeseq_output_prefix = "out/cite-seq_count/_-cbf_1_-cbl_16_-umif_17_-umil_28_-o_Results_" + match + "/cat/merge-nextseq500-pe/" 
+                        citeseq_output_prefix = "out/cite-seq_count/_-cbf_1_-cbl_16_-umif_17_-umil_28_--expected_cells_" + EXPECTED_CELL + "_-o_Results_" + match + "/cat/merge-nexsteq500-pe/" + SAMPLE_NAME
                     elif(SCRNA_KIT == "Total_seq_B"):
-                        citeseq_output_prefix = "out/cite-seq_count/_-cbf_1_-cbl_16_-umif_17_-umil_28_-trim_10_-o_Results_" + match + "/cat/merge-nextseq500-pe/"
+                        citeseq_output_prefix = "out/cite-seq_count/_-cbf_1_-cbl_16_-umif_17_-umil_28_-trim_10_--expected_cells_" + EXPECTED_CELL + "_-o_Results_" + match + "/cat/merge-nexsteq500-pe/" + SAMPLE_NAME
                     else:
-                        citeseq_output_prefix = "out/cite-seq_count/_-cbf_1_-cbl_16_-umif_17_-umil_28_-o_Results_" + match + "/cat/merge-nextseq500-pe/"
+                        citeseq_output_prefix = "out/cite-seq_count/_-cbf_1_-cbl_16_-umif_17_-umil_28_--expected_cells_" + EXPECTED_CELL + "_-o_Results_" + match + "/cat/merge-nexsteq500-pe/" + SAMPLE_NAME
                     citeseq_output_prefix = citeseq_output_prefix.replace("//", "/")
 
-                    #mwconf['ids'][citeseq_output_prefix] = "out/" + cellranger_count_prefix + "/Run_" + str(int(project_samples['run'].unique())) + "/outs/filtered_feature_bc_matrix/barcodes.tsv.gz" 
-
-                    #print(mwconf['ids'][citeseq_output_prefix])
-
-                    citeseq_output_target = citeseq_output_prefix + "/Results_" + match + "/run_report.yaml"
+                    citeseq_output_target = citeseq_output_prefix + "/run_report.yaml"
                     #print(citeseq_output_target)
-                    #SAMPLE1 = "/cat/merge-nexsteq500-pe/" + SAMPLE + "_1.fastq.gz"
-                    #SAMPLE2 = "/cat/merge-nexsteq500-pe/" + SAMPLE + "_2.fastq.gz"
-                    #mwconf['ids'][citeseq_output_prefix] = SAMPLE1
-                    #mwconf['ids'][citeseq_output_prefix] = SAMPLE2
-                    #print(str(project_samples['Sample_Name']))
 
-                    #if PROCESS == 'yes':
-                        #mwconf['targets'].append(citeseq_output_target)
-            
+                    if PROCESS == 'yes':
+                        mwconf['targets'].append(citeseq_output_target)
 
     ##      # Dealing with samples and merge of samples gathered into an experiment:
     ##      # Currently working on it for Capstarrseq:

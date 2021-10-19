@@ -1,0 +1,4 @@
+sample_id,molecule_h5,cellstatus
+CBF_sample_R252_255,out/cellranger/count_CBF_sample_R252_255/outs/molecule_info.h5,non_hashed
+FLT3_R252,out/cellranger/count_--sample_FLT3_R252_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/bcl/Run_252_190329_NS500637_0159_AHYGNKBGX9/Run_252/outs/molecule_info.h5,non_hashed
+mRNA_R306_R309,out/cellranger/count_mRNA_R306_R309/outs/molecule_info.h5,hashed
