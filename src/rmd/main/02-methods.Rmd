@@ -1,0 +1,97 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# Methods
+
+Raw data were processed using cellranger 6.0.2.
+
+The sample CBF (non hashed) has been sequenced two times due to a low cell recovery on first sequencing.
+
+Cell hashing for CBF and FLT3 sample was sequenced two times.
+
+Fixed sample P8 was sequenced two times due to low cell recovery.
+
+For runs sequenced two times, cellranger count was parametered in order to take two input run  [into account (see end of page)](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/count).
+
+Single-cell data are processed using the Seurat R package (Seurat version 4.0.4, R version 4.1.1)
+
+The *Read10X* function from Seurat can read *cellranger count* output and convert it into a matrix.
+
+```{r loading_data}
+UPN23 <- Read10X(data.dir = "../../../out/cellranger/count_--sample_FLT3_R252_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/bcl/Run_252_190329_NS500637_0159_AHYGNKBGX9/Run_252/outs/filtered_feature_bc_matrix")
+UPN29 <- Read10X(data.dir = "../../../out/cellranger/count_CBF_sample_R252_255/outs/filtered_feature_bc_matrix/")
+UPN23_UPN29_cellhashing <- Read10X(data.dir = "../../../out/cellranger/count_mRNA_R306_R309/count_mRNA_R306_R309//outs/filtered_feature_bc_matrix/")
+UPN73 <- Read10X(data.dir = "../../../out/cellranger/count_P8_sample_R372/outs/filtered_feature_bc_matrix/")
+UPN78 <- Read10X(data.dir = "../../../out/cellranger/count_--sample_P13_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_372_NS500-280_17-05-2021_RC/Run_372/outs/filtered_feature_bc_matrix")
+UPN73_UPN78_cellhashing <- Read10X("../../../out/cellranger/count_--sample_mRNA_Hashtag_R342_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_342_NS500-249_11-12-2020_LM/Run_342/outs/filtered_feature_bc_matrix/")
+```
+
+The *CreateSeuratObject* function convert the matrix into a Seurat object that will store analysis. Two parameters are set when creating Seurat object:
+
+* min.cells = 3 (default) -> Include features (genes) detected in at least this many cells.
+* min.features = 200 (default) -> Include cells where at least this many features (genes) are detected.
+
+```{r seurat_object_for_non_hashed}
+# Create seurat object for non multiplexed data.
+Seurat_UPN23 <- CreateSeuratObject(counts = UPN23, project = "UPN23", min.cells = 3, min.features = 200)
+Seurat_UPN29 <- CreateSeuratObject(counts = UPN29, project = "UPN29", min.cells = 3, min.features = 200)
+Seurat_UPN23_UPN29_cellhashing <- CreateSeuratObject(counts = UPN23_UPN29_cellhashing, project = "UPN23_UPN29_cellhashing", min.cells = 3, min.features = 200)
+Seurat_UPN73_UPN78_cellhashing <- CreateSeuratObject(counts = UPN73_UPN78_cellhashing, project = "UPN73_UPN78_cellhashing", min.cells = 3, min.features = 200)
+Seurat_UPN73 <- CreateSeuratObject(counts = UPN73, project = "UPN73", min.cells = 3, min.features = 200)
+Seurat_UPN78 <- CreateSeuratObject(counts = UPN78, project = "UPN78", min.cells = 3, min.features = 200)
+
+rm(UPN23, UPN29, UPN23_UPN29_cellhashing, UPN73_UPN78_cellhashing, UPN73, UPN78)
+```
+
+HTO data are processed using the [cite-seq count, v1.4.3](https://hoohm.github.io/CITE-seq-Count/) tool. Results are read using the *Read10X* from Seurat.
+
+Only common cell barcode originating from HTO (from cite-seq count) and mRNA (from cellranger) data are kept. Those barcodes represent cells detected by cellranger and for which an HTO has been attributed.
+
+```{r read_citeseq_count_information}
+# Read umi_count tables for each sample
+HTO_UPN23_UPN29_cellhashing <-  Read10X(data.dir = "../../../out/cite-seq_count/Run_306_Run_309/umi_count/", gene.column = 1)
+HTO_UPN73_UPN78_cellhashing <- Read10X(data.dir = "../../../out/cite-seq_count/Run_342/umi_count/", gene.column = 1)
+# Remove Hashtag barcode from HTO rownames
+rownames(HTO_UPN23_UPN29_cellhashing) <- gsub(pattern = "-.*", replacement = "", x = rownames(HTO_UPN23_UPN29_cellhashing))
+rownames(HTO_UPN73_UPN78_cellhashing) <- gsub(pattern = "-.*", replacement = "", x = rownames(HTO_UPN73_UPN78_cellhashing))
+# Add a "-1" at the end of cell barcodes for HTO data to have similar names as mRNA data
+colnames(HTO_UPN23_UPN29_cellhashing) <- paste0(colnames(HTO_UPN23_UPN29_cellhashing),"-1")
+colnames(HTO_UPN73_UPN78_cellhashing) <- paste0(colnames(HTO_UPN73_UPN78_cellhashing),"-1")
+# Filter cells that are detected in both mRNA and HTO
+joint.bcs_UPN23_UPN29_cellhashing <- intersect(colnames(Seurat_UPN23_UPN29_cellhashing), colnames(HTO_UPN23_UPN29_cellhashing))
+joint.bcs_UPN73_UPN78_cellhashing <- intersect(colnames(Seurat_UPN73_UPN78_cellhashing), colnames(HTO_UPN73_UPN78_cellhashing))
+# Subset mRNA seurat object to shared cell barcodes
+Seurat_UPN23_UPN29_cellhashing <- subset(x = Seurat_UPN23_UPN29_cellhashing, cells = joint.bcs_UPN23_UPN29_cellhashing)
+Seurat_UPN73_UPN78_cellhashing <- subset(x = Seurat_UPN73_UPN78_cellhashing, cells = joint.bcs_UPN73_UPN78_cellhashing)
+```
+
+Finally, the HTO matrices are normalized using the Centered Log-Ratio method (CLR). This method is recommended by Seurat developers. Then, the *MULTIseqDemux* function is used to assign HTO name to cells. For this function, the parameter *autoThresh = TRUE* was used. This parameter enable the function to perform automated threshold finding to define the best quantile.
+
+```{r HTO_demultiplexing}
+HTO_UPN23_UPN29_cellhashing_joints_bcs <- HTO_UPN23_UPN29_cellhashing[grep("HTO", rownames(HTO_UPN23_UPN29_cellhashing)), colnames(Seurat_UPN23_UPN29_cellhashing)]
+rownames(HTO_UPN23_UPN29_cellhashing_joints_bcs) <- c("UPN29-cellhashing", "UPN23-cellhashing")
+Seurat_UPN23_UPN29_cellhashing[["HTO"]] <- CreateAssayObject(counts = HTO_UPN23_UPN29_cellhashing_joints_bcs)
+# Normalize HTO data, here we use centered log-ratio (CLR) transformation
+Seurat_UPN23_UPN29_cellhashing <- NormalizeData(Seurat_UPN23_UPN29_cellhashing, assay = "HTO", normalization.method = "CLR", margin = 1)
+# Perform HTO demultiplexing
+Seurat_UPN23_UPN29_cellhashing <- MULTIseqDemux(Seurat_UPN23_UPN29_cellhashing, assay = "HTO", autoThresh = TRUE)
+
+# Subset Seurat_UPN23_UPN29_cellhashing for the 2 HTO
+Seurat_UPN23_UPN29_cellhashing_UPN23 <- subset(Seurat_UPN23_UPN29_cellhashing, cells = colnames(Seurat_UPN23_UPN29_cellhashing)[Seurat_UPN23_UPN29_cellhashing$MULTI_ID == "UPN23-cellhashing"])
+Seurat_UPN23_UPN29_cellhashing_UPN29 <- subset(Seurat_UPN23_UPN29_cellhashing, cells = colnames(Seurat_UPN23_UPN29_cellhashing)[Seurat_UPN23_UPN29_cellhashing$MULTI_ID == "UPN29-cellhashing"])
+
+# Same process for UPN73_UPN78_cellhashing
+HTO_UPN73_UPN78_cellhashing_joints_bcs <- HTO_UPN73_UPN78_cellhashing[grep("HTO", rownames(HTO_UPN73_UPN78_cellhashing)), colnames(Seurat_UPN73_UPN78_cellhashing)]
+rownames(HTO_UPN73_UPN78_cellhashing_joints_bcs) <- c("UPN73-cellhashing", "UPN78-cellhashing")
+Seurat_UPN73_UPN78_cellhashing[["HTO"]] <- CreateAssayObject(counts = HTO_UPN73_UPN78_cellhashing_joints_bcs)
+# Normalize HTO data, here we use centered log-ratio (CLR) transformation
+Seurat_UPN73_UPN78_cellhashing <- NormalizeData(Seurat_UPN73_UPN78_cellhashing, assay = "HTO", normalization.method = "CLR", margin = 1)
+# Perform HTO demultiplexing
+Seurat_UPN73_UPN78_cellhashing <- MULTIseqDemux(Seurat_UPN73_UPN78_cellhashing, assay = "HTO", autoThresh = TRUE)
+
+# Subset Seurat_UPN73_UPN78_cellhashing for the 2 HTO
+Seurat_UPN73_UPN78_cellhashing_UPN73 <- subset(Seurat_UPN73_UPN78_cellhashing, cells = colnames(Seurat_UPN73_UPN78_cellhashing)[Seurat_UPN73_UPN78_cellhashing$MULTI_ID == "UPN73-cellhashing"])
+Seurat_UPN73_UPN78_cellhashing_UPN78 <- subset(Seurat_UPN73_UPN78_cellhashing, cells = colnames(Seurat_UPN73_UPN78_cellhashing)[Seurat_UPN73_UPN78_cellhashing$MULTI_ID == "UPN78-cellhashing"])
+```

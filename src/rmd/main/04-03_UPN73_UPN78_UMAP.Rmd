@@ -1,0 +1,63 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+### Hashed samples UPN73 and UPN78
+
+```{r}
+Idents(Seurat_UPN73_UPN78_cellhashing) <- Seurat_UPN73_UPN78_cellhashing$MULTI_ID
+Seurat_UPN73_UPN78_cellhashing_norm <- subset(Seurat_UPN73_UPN78_cellhashing, 
+                                              idents = c("UPN73-cellhashing", "UPN78-cellhashing"))
+Seurat_UPN73_UPN78_cellhashing_norm <- normalize_seurat_object(Seurat_UPN73_UPN78_cellhashing_norm)
+Seurat_UPN73_UPN78_cellhashing_norm <- perform_clustering_seurat(Seurat_UPN73_UPN78_cellhashing_norm)
+DimPlot(Seurat_UPN73_UPN78_cellhashing_norm) + ggtitle("UMAP of UPN73 and UPN78 cell hashing colored by cluster")
+DimPlot(Seurat_UPN73_UPN78_cellhashing_norm, group.by = "MULTI_ID") + ggtitle("UMAP of UPN73 and UPN78 cell hashing colored by samples")
+```
+
+### UPN73 and UPN78 samples
+
+```{r}
+# Perform on non normalized data
+UPN73_UPN78_samples <- c(5,6,7,8)
+# Seurat_object_list_clustered[UPN73_UPN78_samples]
+
+Seurat_UPN73_filtered_processed <- Seurat_object_list_clustered[[5]]
+Seurat_UPN78_filtered_processed <- Seurat_object_list_clustered [[6]]
+Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed <- Seurat_object_list_clustered[[7]]
+Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed <- Seurat_object_list_clustered[[8]]
+
+p1 <- DimPlot(Seurat_UPN73_filtered_processed) + ggtitle("Non hashed UPN73")
+p2 <- DimPlot(Seurat_UPN78_filtered_processed) + ggtitle("Non hashed UPN78")
+p3 <- DimPlot(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed) + ggtitle("Hashed UPN73")
+p4 <- DimPlot(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed) + ggtitle("Hashed UPN78")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p2,p3,p4)
+
+# features <- SelectIntegrationFeatures(object.list = Seurat_object_list_clustered[UPN73_UPN78_samples])
+# immune.anchors <- FindIntegrationAnchors(object.list = Seurat_object_list_clustered[UPN73_UPN78_samples], anchor.features = features)
+# # this command creates an 'integrated' data assay
+# immune.combined <- IntegrateData(anchorset = immune.anchors)
+# 
+# DefaultAssay(immune.combined) <- "integrated"
+# 
+# # Run the standard workflow for visualization and clustering
+# immune.combined <- ScaleData(immune.combined, verbose = FALSE)
+# immune.combined <- RunPCA(immune.combined, npcs = 30, verbose = FALSE)
+# immune.combined <- RunUMAP(immune.combined, reduction = "pca", dims = 1:30)
+# immune.combined <- FindNeighbors(immune.combined, reduction = "pca", dims = 1:30)
+# immune.combined <- FindClusters(immune.combined, resolution = 0.5)
+```
+
+```{r}
+# FeaturePlot(Seurat_FTL3_R252_processed, features = (c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9")))
+# 
+# res_genes_expressing_cells <- GetAssayData(Seurat_FTL3_R252_processed, slot = "data")[,colSums(GetAssayData(Seurat_FTL3_R252_processed, slot = "data")[c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9", "CD34", "IL2RA"),])>1]
+
+```

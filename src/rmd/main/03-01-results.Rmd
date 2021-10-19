@@ -1,0 +1,167 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# Results
+
+## Summary | To be completed!
+
+The following table give global information on datasets.
+
+```{r}
+Seurat_object_list <- list(Seurat_UPN23, Seurat_UPN29, Seurat_UPN23_UPN29_cellhashing_UPN23, Seurat_UPN23_UPN29_cellhashing_UPN29, Seurat_UPN73, Seurat_UPN78, Seurat_UPN73_UPN78_cellhashing_UPN73, Seurat_UPN73_UPN78_cellhashing_UPN78)
+
+# table_colnames <- c("Estimated number of cells", "Mean reads per cell", "Median genes per cell", "Sequencing saturation", "Read mapped confidently to genome", "Fraction reads in cells", "Total genes detected", "Median UMI counts per cell")
+# Result_table <- data.frame(matrix(nrow = 8, ncol = 8), row.names = c("UPN23", "UPN29", "UPN23_cellhashing", "UPN29_cellhashing", "UPN73", "UPN78", "UPN73_cellhashing", "UPN78_cellhashing"))
+# colnames(Result_table) <- table_colnames
+# Result_table$`Estimated number of cells` <- sapply(Seurat_object_list, ncol)
+# Result_table$`Median genes per cell` <- sapply(Seurat_object_list, function(x){median(x$nFeature_RNA)})
+# DT::datatable(Result_table)
+```
+
+## Some QC plots for each sample
+
+On the following plots, the sample is indicated in X axis.
+
+Those plots show the distribution of the number of UMI (nUMI), the number of genes (ngenes) and the percentage of mitochondrial genes (percent_mito) in each cell (dot on plots).
+
+```{r}
+compute_percent_mito_seurat <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 4000){
+  seurat_obj$percent_mito <- PercentageFeatureSet(seurat_obj, features = grep("^MT-", rownames(seurat_obj@assays$RNA@data)))
+  seurat_obj$percent_mito_filter <- seurat_obj$percent_mito > filter_percent_mito
+  seurat_obj$nUMI_filter <- seurat_obj$nCount_RNA > filter_numi
+  seurat_obj$ngenes_filter <- seurat_obj$nFeature_RNA > filter_ngenes
+  return(seurat_obj)
+}
+
+draw_QC_plots_seurat <- function(seurat_obj){
+  seurat_obj$nUMI <- seurat_obj$nCount_RNA
+  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
+  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"))
+  return(qc_plots)
+}
+
+ggviolin_color_outlier <- function(seurat_obj, column_for_points, column_for_color, title = "Violin plot"){
+  ggplot(seurat_obj@meta.data, aes(x = orig.ident, y = column_for_points)) + 
+    geom_violin(aes(fill = orig.ident)) + 
+    scale_fill_manual(values = "grey") + 
+    geom_jitter(aes(color = column_for_color)) + 
+    ggtitle(title)
+}
+
+draw_all_qc_plot_with_outlier <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 4000){
+  seurat_obj_func <- compute_percent_mito_seurat(seurat_obj, filter_percent_mito = filter_percent_mito, 
+                                                 filter_ngenes = filter_ngenes, filter_numi = filter_numi)
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$nCount_RNA, 
+                               column_for_color = seurat_obj_func$nUMI_filter, 
+                               title = paste0("Violin plot of number of UMI, blue dot represent outliers that will be removed")))
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$nFeature_RNA, 
+                               column_for_color = seurat_obj_func$ngenes_filter, 
+                               title = paste0("Violin plot of number of genes, blue dot represent outliers that will be removed")))
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$percent_mito, 
+                               column_for_color = seurat_obj_func$percent_mito_filter, 
+                               title = paste0("Violin plot of percentage of mitochondrial genes, blue dot represent outliers that will be removed")))
+}
+```
+
+### UPN23
+
+```{r QC_UPN23}
+Seurat_UPN23 <- compute_percent_mito_seurat(Seurat_UPN23)
+draw_QC_plots_seurat(Seurat_UPN23)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN23, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN23_filtered <- subset(Seurat_UPN23, subset = ngenes_filter & nUMI_filter & percent_mito_filter,
+                                invert = T)
+```
+
+### UPN29
+
+```{r QC_UPN29}
+Seurat_UPN29 <- compute_percent_mito_seurat(Seurat_UPN29)
+draw_QC_plots_seurat(Seurat_UPN29)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN29, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 20)
+Seurat_UPN29_filtered <- subset(Seurat_UPN29, subset = ngenes_filter & nUMI_filter & percent_mito_filter,
+                                invert = T)
+```
+
+### UPN23 with cellhashing
+
+```{r QC_UPN23_cellhashing}
+Seurat_UPN23_UPN29_cellhashing_UPN23 <- compute_percent_mito_seurat(Seurat_UPN23_UPN29_cellhashing_UPN23)
+draw_QC_plots_seurat(Seurat_UPN23_UPN29_cellhashing_UPN23)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN23_UPN29_cellhashing_UPN23, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN23_UPN29_cellhashing_UPN23_filtered <- subset(Seurat_UPN23_UPN29_cellhashing_UPN23, 
+                                                        subset = ngenes_filter & nUMI_filter & percent_mito_filter,
+                                                        invert = T)
+```
+
+### UPN29 with cellhashing
+
+```{r QC_UPN29_cellhashing}
+Seurat_UPN23_UPN29_cellhashing_UPN29 <- compute_percent_mito_seurat(Seurat_UPN23_UPN29_cellhashing_UPN29)
+draw_QC_plots_seurat(Seurat_UPN23_UPN29_cellhashing_UPN29)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN23_UPN29_cellhashing_UPN29, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 20)
+Seurat_UPN23_UPN29_cellhashing_UPN29_filtered <- subset(Seurat_UPN23_UPN29_cellhashing_UPN29, 
+                                                        subset = ngenes_filter & nUMI_filter & percent_mito_filter,
+                                                        invert = T)
+```
+
+### UPN73 fixed
+
+```{r QC_UPN73}
+Seurat_UPN73 <- compute_percent_mito_seurat(Seurat_UPN73)
+draw_QC_plots_seurat(Seurat_UPN73)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN73, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN73_filtered <- subset(Seurat_UPN73, subset = ngenes_filter & nUMI_filter & percent_mito_filter,
+                                invert = T)
+```
+
+### UPN78 fixed
+
+```{r QC_UPN78}
+Seurat_UPN78 <- compute_percent_mito_seurat(Seurat_UPN78)
+draw_QC_plots_seurat(Seurat_UPN78)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN78, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN78_filtered <- subset(Seurat_UPN78, subset = ngenes_filter & nUMI_filter & percent_mito_filter,
+                                invert = T)
+```
+
+### UPN73 cellhashing
+
+```{r QC_UPN73_cellhashing}
+Seurat_UPN73_UPN78_cellhashing_UPN73 <- compute_percent_mito_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73)
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN73_UPN78_cellhashing_UPN73, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 20)
+Seurat_UPN73_UPN78_cellhashing_UPN73_filtered <- subset(Seurat_UPN73_UPN78_cellhashing_UPN73, 
+                                                        subset = ngenes_filter & nUMI_filter & percent_mito_filter,
+                                                        invert = T)
+```
+
+### UPN78 cellhashing
+
+```{r QC_UPN78_cellhashing}
+Seurat_UPN73_UPN78_cellhashing_UPN78 <- compute_percent_mito_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78)
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN73_UPN78_cellhashing_UPN78, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 20)
+Seurat_UPN73_UPN78_cellhashing_UPN78_filtered <- subset(Seurat_UPN73_UPN78_cellhashing_UPN78, 
+                                                        subset = ngenes_filter & nUMI_filter & percent_mito_filter,
+                                                        invert = T)
+```

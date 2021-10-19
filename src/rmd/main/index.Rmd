@@ -1,0 +1,97 @@
+---
+title: "Madaci2021 analysis"
+author: "Sebastien Nin" 
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::gitbook:
+    split_by: rmd 
+    toc_depth: 6
+    download: ["epub", "mobi"]
+    sharing:
+      facebook: false
+      twitter: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setKnitrChunkDefaultOptions, include=FALSE}
+eval_after <- c(
+  "fig.cap",
+  "fig.height",
+  "fig.width",
+  "out.height",
+  "out.width"
+)
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 10,
+  eval.after = eval_after,
+  cache = FALSE,
+  warning = FALSE,
+  cache.lazy = FALSE
+)
+```
+
+```{r loadLibraries, warning=FALSE, cache=FALSE}
+loadLibrary <- function(package) {
+  if (!require(basename(package), character.only = TRUE)) BiocManager::install(package, update = FALSE)
+  library(basename(package), character.only = TRUE)
+}
+
+packages <- c(
+  "data.table",
+  "pheatmap",
+  "ggplot2",
+  "ggpubr",
+  "ggrepel",
+  "reshape2",
+  "GGally",
+  "factoextra",
+  "gridExtra",
+  "plotly",
+  "patchwork",
+  "Seurat",
+  "cowplot",
+  "DT",
+  "pheatmap",
+  "Seurat",
+  "yaml"
+)
+
+invisible(lapply(packages, loadLibrary))
+theme_set(theme_bw())
+```
+
+```{r loadFunctions, cache=F}
+# Retrieve the relative path used by Bookdown as output folder
+book_from_rmd <- read_yaml("_bookdown.yml")$output_dir
+mw_from_rmd <- sub("/[^\\.].*$", "", book_from_rmd)
+book_from_mw <- gsub("\\.\\./", "", book_from_rmd)
+dir.create(
+  file.path(book_from_rmd, "plots"),
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+functions <- file.path(
+  mw_from_rmd,
+  "../mw-lib/src/r/functions",
+  c(
+    "produceFormattedDataTable.R",
+    "annColToAnnColors.R",
+    "getEnrichrFromGenes.R",
+    "linkSmiToRmdBookDir.R"
+  )
+)
+invisible(lapply(functions, source))
+```
+
+```{r loadCommonVars}
+symnumargs <- list(cutpoints = c(0, 1e-04, 0.001, 0.01, 0.05, 1), symbols = c("∗∗∗∗", "∗∗∗", "∗∗", "∗", "ns"))
+```
+# Abstract
+
+

@@ -1,0 +1,54 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Correlation between cell hashing and non cell hashing fixed samples
+
+### Plots using mean expression of genes found in all samples
+
+For this plot, I subset each sample to only common genes found in all samples.
+
+```{r}
+# Get common genes in compared datasets
+UPN73_UPN78_tot_genes <- list(rownames(Seurat_UPN73_filtered@assays$RNA@data),
+                              rownames(Seurat_UPN78_filtered@assays$RNA@data),
+                              rownames(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered@assays$RNA@data),
+                              rownames(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered@assays$RNA@data))
+UPN73_UPN78_genes <- Reduce(f = intersect, x = UPN73_UPN78_tot_genes)
+
+UPN73_UPN78_tot_genes_Seurat_list <- list(Seurat_UPN73_filtered, Seurat_UPN78_filtered, 
+                                     Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+
+UPN73_UPN78_Seurat_list_UPN73_UPN78_genes <- lapply(UPN73_UPN78_tot_genes_Seurat_list, subset, features = UPN73_UPN78_genes)
+
+UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized <- lapply(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes, normalize_seurat_object)
+
+na_length <- rep(NA, length(UPN73_UPN78_genes))
+mean_df <- data.frame(UPN73_cellhashing = na_length, UPN78_cellhashing = na_length, 
+                      UPN73_fixed = na_length, UPN78_fixed = na_length, row.names = UPN73_UPN78_genes)
+mean_df$UPN73_cellhashing <- rowMeans(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized[[1]]@assays$RNA@data)
+mean_df$UPN78_cellhashing <- rowMeans(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized[[2]]@assays$RNA@data)
+mean_df$UPN73_fixed <- rowMeans(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized[[3]]@assays$RNA@data)
+mean_df$UPN78_fixed <- rowMeans(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized[[4]]@assays$RNA@data)
+ggpairs(mean_df) + ggtitle("Scatter plot matrix of mean expression of each gene in all cells")
+```
+
+<!-- ### Plots using random cells -->
+
+<!-- For the following plots, I chose random cells to draw gene expression. -->
+
+<!-- ```{r} -->
+<!-- # Generate 10 random number between 1 and the min number of cell in compared datasets -->
+<!-- for(random in sample(1:min(sapply(P8_P13_tot_genes_Seurat_list, ncol)), 10)){ -->
+<!--   na_length <- rep(NA, length(P8_P13_genes)) -->
+<!--   loop_df <- data.frame(UPN73_cellhashing = na_length, UPN78_cellhashing = na_length,  -->
+<!--                         UPN73_fixed = na_length, UPN78_fixed = na_length, row.names = P8_P13_genes) -->
+<!--   loop_df$UPN73_cellhashing <- P8_P13_Seurat_list_P8_P13_genes_normalized[[1]]@assays$RNA@data[,random] -->
+<!--   loop_df$UPN78_cellhashing <- P8_P13_Seurat_list_P8_P13_genes_normalized[[2]]@assays$RNA@data[,random] -->
+<!--   loop_df$UPN73_fixed <- P8_P13_Seurat_list_P8_P13_genes_normalized[[3]]@assays$RNA@data[,random] -->
+<!--   loop_df$UPN78_fixed <- P8_P13_Seurat_list_P8_P13_genes_normalized[[4]]@assays$RNA@data[,random] -->
+<!--   print(ggpairs(loop_df) + ggtitle("Scatter plot matrix of expression of each gene randomly selected cells")) -->
+<!-- } -->
+<!-- ``` -->
