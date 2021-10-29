@@ -53,7 +53,6 @@ packages <- c(
   "gridExtra",
   "plotly",
   "patchwork",
-  "Seurat",
   "cowplot",
   "DT",
   "pheatmap",
@@ -76,17 +75,17 @@ dir.create(
   showWarnings = FALSE
 )
 
-functions <- file.path(
-  mw_from_rmd,
-  "../mw-lib/src/r/functions",
-  c(
-    "produceFormattedDataTable.R",
-    "annColToAnnColors.R",
-    "getEnrichrFromGenes.R",
-    "linkSmiToRmdBookDir.R"
-  )
-)
-invisible(lapply(functions, source))
+# functions <- file.path(
+#   mw_from_rmd,
+#   "../mw-lib/src/r/functions",
+#   c(
+#     "produceFormattedDataTable.R",
+#     "annColToAnnColors.R",
+#     "getEnrichrFromGenes.R",
+#     "linkSmiToRmdBookDir.R"
+#   )
+# )
+# invisible(lapply(functions, source))
 ```
 
 ```{r loadCommonVars}

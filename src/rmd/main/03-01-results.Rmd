@@ -42,6 +42,13 @@ draw_QC_plots_seurat <- function(seurat_obj){
   return(qc_plots)
 }
 
+draw_QC_plots_seurat_no_dots <- function(seurat_obj){
+  seurat_obj$nUMI <- seurat_obj$nCount_RNA
+  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
+  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"), pt.size = 0)
+  return(qc_plots)
+}
+
 ggviolin_color_outlier <- function(seurat_obj, column_for_points, column_for_color, title = "Violin plot"){
   ggplot(seurat_obj@meta.data, aes(x = orig.ident, y = column_for_points)) + 
     geom_violin(aes(fill = orig.ident)) + 
@@ -73,6 +80,7 @@ draw_all_qc_plot_with_outlier <- function(seurat_obj, filter_percent_mito= 25, f
 ```{r QC_UPN23}
 Seurat_UPN23 <- compute_percent_mito_seurat(Seurat_UPN23)
 draw_QC_plots_seurat(Seurat_UPN23)
+draw_QC_plots_seurat_no_dots(Seurat_UPN23)
 
 draw_all_qc_plot_with_outlier(Seurat_UPN23, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
 Seurat_UPN23_filtered <- subset(Seurat_UPN23, subset = ngenes_filter & nUMI_filter & percent_mito_filter,
@@ -84,6 +92,7 @@ Seurat_UPN23_filtered <- subset(Seurat_UPN23, subset = ngenes_filter & nUMI_filt
 ```{r QC_UPN29}
 Seurat_UPN29 <- compute_percent_mito_seurat(Seurat_UPN29)
 draw_QC_plots_seurat(Seurat_UPN29)
+draw_QC_plots_seurat_no_dots(Seurat_UPN29)
 
 draw_all_qc_plot_with_outlier(Seurat_UPN29, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 20)
 Seurat_UPN29_filtered <- subset(Seurat_UPN29, subset = ngenes_filter & nUMI_filter & percent_mito_filter,
@@ -95,6 +104,7 @@ Seurat_UPN29_filtered <- subset(Seurat_UPN29, subset = ngenes_filter & nUMI_filt
 ```{r QC_UPN23_cellhashing}
 Seurat_UPN23_UPN29_cellhashing_UPN23 <- compute_percent_mito_seurat(Seurat_UPN23_UPN29_cellhashing_UPN23)
 draw_QC_plots_seurat(Seurat_UPN23_UPN29_cellhashing_UPN23)
+draw_QC_plots_seurat_no_dots(Seurat_UPN23_UPN29_cellhashing_UPN23)
 
 draw_all_qc_plot_with_outlier(Seurat_UPN23_UPN29_cellhashing_UPN23, filter_numi = 20000, 
                               filter_ngenes = 4000, filter_percent_mito = 25)
@@ -108,6 +118,7 @@ Seurat_UPN23_UPN29_cellhashing_UPN23_filtered <- subset(Seurat_UPN23_UPN29_cellh
 ```{r QC_UPN29_cellhashing}
 Seurat_UPN23_UPN29_cellhashing_UPN29 <- compute_percent_mito_seurat(Seurat_UPN23_UPN29_cellhashing_UPN29)
 draw_QC_plots_seurat(Seurat_UPN23_UPN29_cellhashing_UPN29)
+draw_QC_plots_seurat_no_dots(Seurat_UPN23_UPN29_cellhashing_UPN29)
 
 draw_all_qc_plot_with_outlier(Seurat_UPN23_UPN29_cellhashing_UPN29, filter_numi = 20000, 
                               filter_ngenes = 4000, filter_percent_mito = 20)
@@ -121,6 +132,7 @@ Seurat_UPN23_UPN29_cellhashing_UPN29_filtered <- subset(Seurat_UPN23_UPN29_cellh
 ```{r QC_UPN73}
 Seurat_UPN73 <- compute_percent_mito_seurat(Seurat_UPN73)
 draw_QC_plots_seurat(Seurat_UPN73)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73)
 
 draw_all_qc_plot_with_outlier(Seurat_UPN73, filter_numi = 20000, 
                               filter_ngenes = 4000, filter_percent_mito = 25)
@@ -133,6 +145,7 @@ Seurat_UPN73_filtered <- subset(Seurat_UPN73, subset = ngenes_filter & nUMI_filt
 ```{r QC_UPN78}
 Seurat_UPN78 <- compute_percent_mito_seurat(Seurat_UPN78)
 draw_QC_plots_seurat(Seurat_UPN78)
+draw_QC_plots_seurat_no_dots(Seurat_UPN78)
 
 draw_all_qc_plot_with_outlier(Seurat_UPN78, filter_numi = 20000, 
                               filter_ngenes = 4000, filter_percent_mito = 25)
@@ -145,6 +158,7 @@ Seurat_UPN78_filtered <- subset(Seurat_UPN78, subset = ngenes_filter & nUMI_filt
 ```{r QC_UPN73_cellhashing}
 Seurat_UPN73_UPN78_cellhashing_UPN73 <- compute_percent_mito_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73)
 draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN73)
 
 draw_all_qc_plot_with_outlier(Seurat_UPN73_UPN78_cellhashing_UPN73, filter_numi = 20000, 
                               filter_ngenes = 4000, filter_percent_mito = 20)
@@ -158,6 +172,7 @@ Seurat_UPN73_UPN78_cellhashing_UPN73_filtered <- subset(Seurat_UPN73_UPN78_cellh
 ```{r QC_UPN78_cellhashing}
 Seurat_UPN73_UPN78_cellhashing_UPN78 <- compute_percent_mito_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78)
 draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN78)
 
 draw_all_qc_plot_with_outlier(Seurat_UPN73_UPN78_cellhashing_UPN78, filter_numi = 20000, 
                               filter_ngenes = 4000, filter_percent_mito = 20)
