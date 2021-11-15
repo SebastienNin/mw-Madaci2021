@@ -57,7 +57,8 @@ packages <- c(
   "DT",
   "pheatmap",
   "Seurat",
-  "yaml"
+  "yaml",
+  "dplyr"
 )
 
 invisible(lapply(packages, loadLibrary))

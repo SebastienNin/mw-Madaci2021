@@ -55,10 +55,42 @@ grid.arrange(p1,p2,p3,p4)
 # immune.combined <- FindClusters(immune.combined, resolution = 0.5)
 ```
 
-```{r}
-FeaturePlot(Seurat_UPN23_filtered_processed, features = (c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9")))
+### Top 10 marker genes by cluster and samples
 
-res_genes_expressing_cells <- colnames(GetAssayData(Seurat_UPN23_filtered_processed, slot = "data")[,colSums(GetAssayData(Seurat_UPN23_filtered_processed, slot = "data")[c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9", "CD34", "IL2RA"),])>1])
-DimPlot(Seurat_UPN23_filtered_processed)
-DimPlot(Seurat_UPN23_filtered_processed, cells = res_genes_expressing_cells)
+#### UPN 23 non cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN23_filtered_processed, DE_table = DE_results_list[[1]])
+print(top_10_heatmap)
+```
+
+#### UPN 29 non cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN29_filtered_processed, DE_table = DE_results_list[[2]])
+print(top_10_heatmap)
+```
+
+#### UPN 23 cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, 
+                                      DE_table = DE_results_list[[3]])
+print(top_10_heatmap)
+```
+
+#### UPN 29 cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed,
+                                      DE_table = DE_results_list[[4]])
+print(top_10_heatmap)
+```
+
+```{r}
+# FeaturePlot(Seurat_UPN23_filtered_processed, features = (c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9")))
+# 
+# res_genes_expressing_cells <- colnames(GetAssayData(Seurat_UPN23_filtered_processed, slot = "data")[,colSums(GetAssayData(Seurat_UPN23_filtered_processed, slot = "data")[c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9", "CD34", "IL2RA"),])>1])
+# DimPlot(Seurat_UPN23_filtered_processed)
+# DimPlot(Seurat_UPN23_filtered_processed, cells = res_genes_expressing_cells)
 ```

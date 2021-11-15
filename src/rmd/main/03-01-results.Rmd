@@ -180,3 +180,10 @@ Seurat_UPN73_UPN78_cellhashing_UPN78_filtered <- subset(Seurat_UPN73_UPN78_cellh
                                                         subset = ngenes_filter & nUMI_filter & percent_mito_filter,
                                                         invert = T)
 ```
+
+```{r}
+# Clean memory
+rm(Seurat_object_list, Seurat_UPN23, Seurat_UPN29, Seurat_UPN23_UPN29_cellhashing_UPN23, Seurat_UPN23_UPN29_cellhashing_UPN29, Seurat_UPN73, Seurat_UPN78, Seurat_UPN73_UPN78_cellhashing_UPN73, Seurat_UPN73_UPN78_cellhashing_UPN78)
+gc()
+```
+

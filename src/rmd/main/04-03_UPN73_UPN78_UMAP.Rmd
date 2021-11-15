@@ -55,6 +55,38 @@ grid.arrange(p1,p2,p3,p4)
 # immune.combined <- FindClusters(immune.combined, resolution = 0.5)
 ```
 
+### Top 10 marker genes by cluster and samples
+
+#### UPN 23 non cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_filtered_processed, DE_table = DE_results_list[[5]])
+print(top_10_heatmap)
+```
+
+#### UPN 29 non cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN78_filtered_processed, DE_table = DE_results_list[[6]])
+print(top_10_heatmap)
+```
+
+#### UPN 23 cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed, 
+                                      DE_table = DE_results_list[[7]])
+print(top_10_heatmap)
+```
+
+#### UPN 29 cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed,
+                                      DE_table = DE_results_list[[8]])
+print(top_10_heatmap)
+```
+
 ```{r}
 # FeaturePlot(Seurat_FTL3_R252_processed, features = (c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9")))
 # 

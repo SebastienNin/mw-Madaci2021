@@ -95,3 +95,13 @@ Seurat_UPN73_UPN78_cellhashing <- MULTIseqDemux(Seurat_UPN73_UPN78_cellhashing, 
 Seurat_UPN73_UPN78_cellhashing_UPN73 <- subset(Seurat_UPN73_UPN78_cellhashing, cells = colnames(Seurat_UPN73_UPN78_cellhashing)[Seurat_UPN73_UPN78_cellhashing$MULTI_ID == "UPN73-cellhashing"])
 Seurat_UPN73_UPN78_cellhashing_UPN78 <- subset(Seurat_UPN73_UPN78_cellhashing, cells = colnames(Seurat_UPN73_UPN78_cellhashing)[Seurat_UPN73_UPN78_cellhashing$MULTI_ID == "UPN78-cellhashing"])
 ```
+
+```{r}
+#Clean memory
+rm(HTO_UPN23_UPN29_cellhashing, HTO_UPN73_UPN78_cellhashing,
+   HTO_UPN23_UPN29_cellhashing_joints_bcs, HTO_UPN73_UPN78_cellhashing_joints_bcs, 
+   joint.bcs_UPN23_UPN29_cellhashing, joint.bcs_UPN73_UPN78_cellhashing)
+
+gc()
+```
+

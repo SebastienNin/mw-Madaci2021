@@ -52,3 +52,11 @@ ggpairs(mean_df) + ggtitle("Scatter plot matrix of mean expression of each gene 
 <!--   print(ggpairs(loop_df) + ggtitle("Scatter plot matrix of expression of each gene randomly selected cells")) -->
 <!-- } -->
 <!-- ``` -->
+
+
+```{r}
+#Clean memory
+rm(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized,
+   UPN73_UPN78_Seurat_list_UPN73_UPN78_genes)
+gc()
+```

@@ -10,12 +10,26 @@ For each sample, we performed a clustering based on variable genes
 
 ```{r}
 perform_clustering_seurat <- function(seurat_obj){
+  seurat_obj <- NormalizeData(seurat_obj, normalization.method = "LogNormalize", scale.factor = 10000)
   seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 2000)
-  seurat_obj <- ScaleData(seurat_obj, do.scale = F)
+  seurat_obj <- ScaleData(seurat_obj, do.scale = F, features = rownames(seurat_obj))
   seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
   seurat_obj <- FindNeighbors(seurat_obj, dims = 1:15)
   seurat_obj <- FindClusters(seurat_obj, resolution = 0.8)
   seurat_obj <- RunUMAP(seurat_obj, dims = 1:15)
+}
+
+perform_DE_seurat <- function(seurat_obj){
+  DE_results <- FindAllMarkers(seurat_obj, min.pct = 0.2, only.pos = T)
+  return(DE_results)
+}
+
+draw_top_10_heatmap <- function(seurat_obj, DE_table){
+  DE_table %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log2FC) -> top10
+  top_marker_heatmap <- DoHeatmap(seurat_obj, features = top10$gene)
+  return(top_marker_heatmap)
 }
 ```
 
@@ -25,4 +39,16 @@ Seurat_object_list <- list(Seurat_UPN23_filtered, Seurat_UPN29_filtered,
                            Seurat_UPN73_filtered, Seurat_UPN78_filtered,
                            Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
 Seurat_object_list_clustered <- lapply(Seurat_object_list, perform_clustering_seurat)
+DE_results_list <- lapply(Seurat_object_list_clustered, perform_DE_seurat)
+```
+
+```{r}
+# Cleaning memory
+rm(Seurat_object_list)
+rm(Seurat_UPN23_filtered, Seurat_UPN29_filtered, 
+   Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, Seurat_UPN23_UPN29_cellhashing_UPN29_filtered,
+   Seurat_UPN73_filtered, Seurat_UPN78_filtered,
+   Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+
+gc()
 ```
