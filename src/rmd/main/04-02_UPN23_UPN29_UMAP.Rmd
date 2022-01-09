@@ -64,11 +64,37 @@ top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN23_filtered_process
 print(top_10_heatmap)
 ```
 
+```{r}
+datatable(DE_results_list[[1]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
 #### UPN 29 non cell hashing
 
 ```{r}
 top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN29_filtered_processed, DE_table = DE_results_list[[2]])
 print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[2]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
 ```
 
 #### UPN 23 cell hashing
@@ -77,6 +103,19 @@ print(top_10_heatmap)
 top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, 
                                       DE_table = DE_results_list[[3]])
 print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[3]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
 ```
 
 #### UPN 29 cell hashing
@@ -88,9 +127,31 @@ print(top_10_heatmap)
 ```
 
 ```{r}
+datatable(DE_results_list[[4]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+```{r}
 # FeaturePlot(Seurat_UPN23_filtered_processed, features = (c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9")))
 # 
 # res_genes_expressing_cells <- colnames(GetAssayData(Seurat_UPN23_filtered_processed, slot = "data")[,colSums(GetAssayData(Seurat_UPN23_filtered_processed, slot = "data")[c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9", "CD34", "IL2RA"),])>1])
 # DimPlot(Seurat_UPN23_filtered_processed)
 # DimPlot(Seurat_UPN23_filtered_processed, cells = res_genes_expressing_cells)
 ```
+
+```{r}
+rm(Seurat_UPN23_filtered_processed, Seurat_UPN29_filtered_processed,
+   Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed,
+   Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed)
+rm(Seurat_UPN23_UPN29_cellhashing_norm, Seurat_UPN23_UPN29_cellhashing)
+gc()
+```
+

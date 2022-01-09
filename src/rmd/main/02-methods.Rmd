@@ -23,7 +23,8 @@ The *Read10X* function from Seurat can read *cellranger count* output and conver
 UPN23 <- Read10X(data.dir = "../../../out/cellranger/count_--sample_FLT3_R252_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/bcl/Run_252_190329_NS500637_0159_AHYGNKBGX9/Run_252/outs/filtered_feature_bc_matrix")
 UPN29 <- Read10X(data.dir = "../../../out/cellranger/count_CBF_sample_R252_255/outs/filtered_feature_bc_matrix/")
 UPN23_UPN29_cellhashing <- Read10X(data.dir = "../../../out/cellranger/count_mRNA_R306_R309/count_mRNA_R306_R309//outs/filtered_feature_bc_matrix/")
-UPN73 <- Read10X(data.dir = "../../../out/cellranger/count_P8_sample_R372/outs/filtered_feature_bc_matrix/")
+# UPN73 <- Read10X(data.dir = "../../../out/cellranger/count_P8_sample_R372/outs/filtered_feature_bc_matrix/")
+UPN73 <- Read10X(data.dir = "../../../out/cellranger/count_--sample_3_P8bis_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_378_NS500-286_06-07-2021_RC/Run_378/outs/filtered_feature_bc_matrix/")
 UPN78 <- Read10X(data.dir = "../../../out/cellranger/count_--sample_P13_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_372_NS500-280_17-05-2021_RC/Run_372/outs/filtered_feature_bc_matrix")
 UPN73_UPN78_cellhashing <- Read10X("../../../out/cellranger/count_--sample_mRNA_Hashtag_R342_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_342_NS500-249_11-12-2020_LM/Run_342/outs/filtered_feature_bc_matrix/")
 ```

@@ -6,14 +6,6 @@ editor_options:
 
 ## Correlation between cell hashing and non cell hashing samples
 
-```{r}
-# Process each Seurat object (normalization)
-normalize_seurat_object <- function(seurat_object){
-  normalized_seurat_object <- NormalizeData(seurat_object, normalization.method = "LogNormalize", scale.factor = 10000)
-  return(normalized_seurat_object)
-}
-```
-
 ### Plots using mean expression of genes found in all samples
 
 For this plot, I subset each sample to only common genes found in all samples.
@@ -64,6 +56,10 @@ ggpairs(mean_df) + ggtitle("Scatter plot matrix of mean expression of each gene 
 ```{r}
 #Clean memory
 rm(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized,
-   UPN23_UPN29_Seurat_list_UPN23_UPN29_genes)
+   UPN23_UPN29_Seurat_list_UPN23_UPN29_genes,
+   UPN23_UPN29_Seurat_list)
+# rm(Seurat_UPN23_filtered, Seurat_UPN29_filtered, 
+   # Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, 
+   # Seurat_UPN23_UPN29_cellhashing_UPN29_filtered)
+gc()
 ```
-

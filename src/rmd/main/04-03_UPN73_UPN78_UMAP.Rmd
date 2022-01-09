@@ -57,21 +57,47 @@ grid.arrange(p1,p2,p3,p4)
 
 ### Top 10 marker genes by cluster and samples
 
-#### UPN 23 non cell hashing
+#### UPN 73 non cell hashing
 
 ```{r}
 top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_filtered_processed, DE_table = DE_results_list[[5]])
 print(top_10_heatmap)
 ```
 
-#### UPN 29 non cell hashing
+```{r}
+datatable(DE_results_list[[5]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
+#### UPN 78 non cell hashing
 
 ```{r}
 top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN78_filtered_processed, DE_table = DE_results_list[[6]])
 print(top_10_heatmap)
 ```
 
-#### UPN 23 cell hashing
+```{r}
+datatable(DE_results_list[[6]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
+#### UPN 73 cell hashing
 
 ```{r}
 top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed, 
@@ -79,7 +105,20 @@ top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_UPN78_cellhashin
 print(top_10_heatmap)
 ```
 
-#### UPN 29 cell hashing
+```{r}
+datatable(DE_results_list[[7]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
+#### UPN 78 cell hashing
 
 ```{r}
 top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed,
@@ -88,8 +127,30 @@ print(top_10_heatmap)
 ```
 
 ```{r}
+datatable(DE_results_list[[8]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
+```{r}
 # FeaturePlot(Seurat_FTL3_R252_processed, features = (c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9")))
 # 
 # res_genes_expressing_cells <- GetAssayData(Seurat_FTL3_R252_processed, slot = "data")[,colSums(GetAssayData(Seurat_FTL3_R252_processed, slot = "data")[c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9", "CD34", "IL2RA"),])>1]
 
+```
+
+```{r}
+rm(Seurat_UPN73_filtered_processed, Seurat_UPN78_filtered_processed,
+   Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed,
+   Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed)
+rm(Seurat_object_list_clustered)
+rm(Seurat_UPN73_UPN78_cellhashing, Seurat_UPN73_UPN78_cellhashing_norm)
+gc()
 ```

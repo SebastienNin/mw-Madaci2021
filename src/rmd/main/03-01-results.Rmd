@@ -26,55 +26,6 @@ On the following plots, the sample is indicated in X axis.
 
 Those plots show the distribution of the number of UMI (nUMI), the number of genes (ngenes) and the percentage of mitochondrial genes (percent_mito) in each cell (dot on plots).
 
-```{r}
-compute_percent_mito_seurat <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 4000){
-  seurat_obj$percent_mito <- PercentageFeatureSet(seurat_obj, features = grep("^MT-", rownames(seurat_obj@assays$RNA@data)))
-  seurat_obj$percent_mito_filter <- seurat_obj$percent_mito > filter_percent_mito
-  seurat_obj$nUMI_filter <- seurat_obj$nCount_RNA > filter_numi
-  seurat_obj$ngenes_filter <- seurat_obj$nFeature_RNA > filter_ngenes
-  return(seurat_obj)
-}
-
-draw_QC_plots_seurat <- function(seurat_obj){
-  seurat_obj$nUMI <- seurat_obj$nCount_RNA
-  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
-  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"))
-  return(qc_plots)
-}
-
-draw_QC_plots_seurat_no_dots <- function(seurat_obj){
-  seurat_obj$nUMI <- seurat_obj$nCount_RNA
-  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
-  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"), pt.size = 0)
-  return(qc_plots)
-}
-
-ggviolin_color_outlier <- function(seurat_obj, column_for_points, column_for_color, title = "Violin plot"){
-  ggplot(seurat_obj@meta.data, aes(x = orig.ident, y = column_for_points)) + 
-    geom_violin(aes(fill = orig.ident)) + 
-    scale_fill_manual(values = "grey") + 
-    geom_jitter(aes(color = column_for_color)) + 
-    ggtitle(title)
-}
-
-draw_all_qc_plot_with_outlier <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 4000){
-  seurat_obj_func <- compute_percent_mito_seurat(seurat_obj, filter_percent_mito = filter_percent_mito, 
-                                                 filter_ngenes = filter_ngenes, filter_numi = filter_numi)
-  print(ggviolin_color_outlier(seurat_obj_func, 
-                               column_for_points = seurat_obj_func$nCount_RNA, 
-                               column_for_color = seurat_obj_func$nUMI_filter, 
-                               title = paste0("Violin plot of number of UMI, blue dot represent outliers that will be removed")))
-  print(ggviolin_color_outlier(seurat_obj_func, 
-                               column_for_points = seurat_obj_func$nFeature_RNA, 
-                               column_for_color = seurat_obj_func$ngenes_filter, 
-                               title = paste0("Violin plot of number of genes, blue dot represent outliers that will be removed")))
-  print(ggviolin_color_outlier(seurat_obj_func, 
-                               column_for_points = seurat_obj_func$percent_mito, 
-                               column_for_color = seurat_obj_func$percent_mito_filter, 
-                               title = paste0("Violin plot of percentage of mitochondrial genes, blue dot represent outliers that will be removed")))
-}
-```
-
 ### UPN23
 
 ```{r QC_UPN23}

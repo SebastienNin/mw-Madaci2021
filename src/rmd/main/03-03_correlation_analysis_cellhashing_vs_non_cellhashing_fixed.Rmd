@@ -19,7 +19,8 @@ UPN73_UPN78_tot_genes <- list(rownames(Seurat_UPN73_filtered@assays$RNA@data),
 UPN73_UPN78_genes <- Reduce(f = intersect, x = UPN73_UPN78_tot_genes)
 
 UPN73_UPN78_tot_genes_Seurat_list <- list(Seurat_UPN73_filtered, Seurat_UPN78_filtered, 
-                                     Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+                                          Seurat_UPN73_UPN78_cellhashing_UPN73_filtered,
+                                          Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
 
 UPN73_UPN78_Seurat_list_UPN73_UPN78_genes <- lapply(UPN73_UPN78_tot_genes_Seurat_list, subset, features = UPN73_UPN78_genes)
 
@@ -57,6 +58,11 @@ ggpairs(mean_df) + ggtitle("Scatter plot matrix of mean expression of each gene 
 ```{r}
 #Clean memory
 rm(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized,
-   UPN73_UPN78_Seurat_list_UPN73_UPN78_genes)
+   UPN73_UPN78_Seurat_list_UPN73_UPN78_genes,
+   UPN73_UPN78_tot_genes_Seurat_list)
+rm(mean_df)
+# rm(Seurat_UPN73_filtered, Seurat_UPN78_filtered, 
+#    Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, 
+#    Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
 gc()
 ```

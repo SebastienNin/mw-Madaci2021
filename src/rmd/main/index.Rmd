@@ -58,7 +58,8 @@ packages <- c(
   "pheatmap",
   "Seurat",
   "yaml",
-  "dplyr"
+  "dplyr",
+  "VennDiagram"
 )
 
 invisible(lapply(packages, loadLibrary))
@@ -91,6 +92,90 @@ dir.create(
 
 ```{r loadCommonVars}
 symnumargs <- list(cutpoints = c(0, 1e-04, 0.001, 0.01, 0.05, 1), symbols = c("∗∗∗∗", "∗∗∗", "∗∗", "∗", "ns"))
+```
+
+```{r}
+# Process each Seurat object (normalization)
+normalize_seurat_object <- function(seurat_object){
+  normalized_seurat_object <- NormalizeData(seurat_object, normalization.method = "LogNormalize", scale.factor = 10000)
+  return(normalized_seurat_object)
+}
+
+perform_clustering_seurat <- function(seurat_obj){
+  seurat_obj <- NormalizeData(seurat_obj, normalization.method = "LogNormalize", scale.factor = 10000)
+  seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 2000)
+  seurat_obj <- ScaleData(seurat_obj, do.scale = F, features = rownames(seurat_obj))
+  seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
+  seurat_obj <- FindNeighbors(seurat_obj, dims = 1:15)
+  seurat_obj <- FindClusters(seurat_obj, resolution = 0.8)
+  seurat_obj <- RunUMAP(seurat_obj, dims = 1:15)
+}
+
+perform_DE_seurat <- function(seurat_obj){
+  DE_results <- FindAllMarkers(seurat_obj, min.pct = 0.2, only.pos = T)
+  return(DE_results)
+}
+
+draw_top_10_heatmap <- function(seurat_obj, DE_table){
+  DE_table %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log2FC) -> top10
+  top_marker_heatmap <- DoHeatmap(seurat_obj, features = top10$gene)
+  return(top_marker_heatmap)
+}
+
+compute_percent_mito_seurat <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 4000){
+  seurat_obj$percent_mito <- PercentageFeatureSet(seurat_obj, features = grep("^MT-", rownames(seurat_obj@assays$RNA@data)))
+  seurat_obj$percent_mito_filter <- seurat_obj$percent_mito > filter_percent_mito
+  seurat_obj$nUMI_filter <- seurat_obj$nCount_RNA > filter_numi
+  seurat_obj$ngenes_filter <- seurat_obj$nFeature_RNA > filter_ngenes
+  return(seurat_obj)
+}
+
+draw_QC_plots_seurat <- function(seurat_obj){
+  seurat_obj$nUMI <- seurat_obj$nCount_RNA
+  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
+  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"))
+  return(qc_plots)
+}
+
+draw_QC_plots_seurat_no_dots <- function(seurat_obj){
+  seurat_obj$nUMI <- seurat_obj$nCount_RNA
+  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
+  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"), pt.size = 0)
+  return(qc_plots)
+}
+
+ggviolin_color_outlier <- function(seurat_obj, column_for_points, column_for_color, title = "Violin plot"){
+  ggplot(seurat_obj@meta.data, aes(x = orig.ident, y = column_for_points)) + 
+    geom_violin(aes(fill = orig.ident)) + 
+    scale_fill_manual(values = "grey") + 
+    geom_jitter(aes(color = column_for_color)) + 
+    ggtitle(title)
+}
+
+draw_all_qc_plot_with_outlier <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 4000){
+  seurat_obj_func <- compute_percent_mito_seurat(seurat_obj, filter_percent_mito = filter_percent_mito, 
+                                                 filter_ngenes = filter_ngenes, filter_numi = filter_numi)
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$nCount_RNA, 
+                               column_for_color = seurat_obj_func$nUMI_filter, 
+                               title = paste0("Violin plot of number of UMI, blue dot represent outliers that will be removed")))
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$nFeature_RNA, 
+                               column_for_color = seurat_obj_func$ngenes_filter, 
+                               title = paste0("Violin plot of number of genes, blue dot represent outliers that will be removed")))
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$percent_mito, 
+                               column_for_color = seurat_obj_func$percent_mito_filter, 
+                               title = paste0("Violin plot of percentage of mitochondrial genes, blue dot represent outliers that will be removed")))
+}
+
+display_venn <- function(x, ...){
+  grid.newpage()
+  venn_object <- venn.diagram(x, filename = NULL, ...)
+  grid.draw(venn_object)
+}
 ```
 # Abstract
 
