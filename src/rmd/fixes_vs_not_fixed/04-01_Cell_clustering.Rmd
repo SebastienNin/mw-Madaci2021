@@ -9,16 +9,12 @@ editor_options:
 For each sample, we performed a clustering based on variable genes
 
 ```{r}
-Seurat_object_list <- list(Seurat_UPN23_filtered, Seurat_UPN29_filtered, 
-                           Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, Seurat_UPN23_UPN29_cellhashing_UPN29_filtered,
-                           Seurat_UPN73_filtered, Seurat_UPN78_filtered,
+Seurat_object_list <- list(Seurat_UPN73_filtered, Seurat_UPN78_filtered,
                            Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
 ```
 
 ```{r}
-rm(Seurat_UPN23_filtered, Seurat_UPN29_filtered, 
-   Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, Seurat_UPN23_UPN29_cellhashing_UPN29_filtered,
-   Seurat_UPN73_filtered, Seurat_UPN78_filtered,
+rm(Seurat_UPN73_filtered, Seurat_UPN78_filtered,
    Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
 gc()
 ```
@@ -27,6 +23,11 @@ gc()
 ```{r}
 Seurat_object_list_clustered <- lapply(Seurat_object_list, perform_clustering_seurat)
 DE_results_list <- lapply(Seurat_object_list_clustered, perform_DE_seurat)
+```
+
+```{r}
+dir.create("../../../out/fixed_vs_not_fixed/R_obj/", recursive = T)
+saveRDS(DE_results_list, file = "../../../out/fixed_vs_not_fixed/R_obj/DE_results_list.rds")
 ```
 
 ```{r}

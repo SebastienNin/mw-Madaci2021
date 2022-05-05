@@ -1,0 +1,166 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+### Comparison of DE genes for each sample.
+
+#### UPN23 
+
+```{r}
+UPN23_non_cellhashing_unique_genes <- unique(DE_results_list[[1]]$gene)
+UPN23_cellhashing_unique_genes <- unique(DE_results_list[[3]]$gene)
+
+display_venn(
+  x = list(UPN23_non_cellhashing_unique_genes, UPN23_cellhashing_unique_genes),
+  category.names = c("UPN23 non cellhashing", 
+                     "UPN23 cellhashing"),
+  # Cercles
+  lwd = 2,
+  lty = 'blank',
+  fill = c("#999999", "#E69F00"),
+  # Nombres
+  cex = .9,
+  fontface = "italic",
+  # Noms des groupes
+  cat.cex = 1,
+  cat.fontface = "bold",
+  cat.default.pos = "outer",
+  cat.dist = c(0.055, 0.055)
+)
+```
+
+##### Gene list common in both conditions
+
+```{r}
+datatable(data.frame(Common_genes = intersect(UPN23_non_cellhashing_unique_genes, UPN23_cellhashing_unique_genes)),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+##### Gene list specific to non cell hashing
+
+```{r}
+datatable(data.frame(Non_cellhashing_genes = UPN23_non_cellhashing_unique_genes[!UPN23_non_cellhashing_unique_genes %in% UPN23_cellhashing_unique_genes]),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+##### Gene list specific to cell hashing
+
+```{r}
+datatable(data.frame(Cellhashing_genes = UPN23_cellhashing_unique_genes[!UPN23_cellhashing_unique_genes %in% UPN23_non_cellhashing_unique_genes]),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+#### UPN29
+
+```{r}
+UPN29_non_cellhashing_unique_genes <- unique(DE_results_list[[2]]$gene)
+UPN29_cellhashing_unique_genes <- unique(DE_results_list[[4]]$gene)
+
+grid.draw(venn.diagram(x = list(UPN29_non_cellhashing_unique_genes,  UPN29_cellhashing_unique_genes), filename = NULL,
+                       category.names = c("UPN29 cellhashing", "UPN29 non cellhashing"),
+                       # Cercles
+                       lwd = 2,
+                       lty = 'blank',
+                       fill = c("#999999", "#E69F00"),
+                       # Nombres
+                       cex = .9,
+                       fontface = "italic",
+                       # Noms des groupes
+                       cat.cex = 1,
+                       cat.fontface = "bold",
+                       cat.default.pos = "outer",
+                       cat.dist = c(0.055, 0.055)
+))
+
+# display_venn(
+#   x = list("UPN29 non cellhashing" = UPN29_non_cellhashing_unique_genes, "UPN29 cellhashing" = UPN29_cellhashing_unique_genes),
+#   # Cercles
+#   lwd = 2,
+#   lty = 'blank',
+#   fill = c("#999999", "#E69F00"),
+#   # Nombres
+#   cex = .9,
+#   fontface = "italic",
+#   # Noms des groupes
+#   cat.cex = 1,
+#   cat.fontface = "bold",
+#   cat.default.pos = "outer",
+#   cat.dist = c(0.055, 0.055)
+# )
+```
+
+##### Gene list common in both conditions
+
+```{r}
+datatable(data.frame(Common_genes = intersect(UPN29_non_cellhashing_unique_genes, UPN29_cellhashing_unique_genes)),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+##### Gene list specific to non cell hashing
+
+```{r}
+datatable(data.frame(Non_cellhashing_genes = UPN29_non_cellhashing_unique_genes[!UPN29_non_cellhashing_unique_genes %in% UPN29_cellhashing_unique_genes]),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+##### Gene list specific to cell hashing
+
+```{r}
+datatable(data.frame(Cellhashing_genes = UPN29_cellhashing_unique_genes[!UPN29_cellhashing_unique_genes %in% UPN29_non_cellhashing_unique_genes]),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+```{r remove_venn_logs}
+logs <- list.files()[grep(pattern = "VennDiagram.*", x = list.files())]
+file.remove(logs)
+```

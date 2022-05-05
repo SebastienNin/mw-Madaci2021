@@ -112,7 +112,7 @@ perform_clustering_seurat <- function(seurat_obj){
 }
 
 perform_DE_seurat <- function(seurat_obj){
-  DE_results <- FindAllMarkers(seurat_obj, min.pct = 0.2, only.pos = T)
+  DE_results <- FindAllMarkers(seurat_obj, min.pct = 0.2, only.pos = T, return.thresh = 0.05)
   return(DE_results)
 }
 
@@ -120,7 +120,7 @@ draw_top_10_heatmap <- function(seurat_obj, DE_table){
   DE_table %>%
     group_by(cluster) %>%
     top_n(n = 10, wt = avg_log2FC) -> top10
-  top_marker_heatmap <- DoHeatmap(seurat_obj, features = top10$gene)
+  top_marker_heatmap <- DoHeatmap(seurat_obj, features = top10$gene, size = 4)
   return(top_marker_heatmap)
 }
 

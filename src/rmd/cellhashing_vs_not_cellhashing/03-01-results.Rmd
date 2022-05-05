@@ -1,0 +1,117 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# Results
+
+## Summary
+
+The following table give global information on datasets.
+
+```{r}
+DT::datatable(Result_table)
+```
+
+## Some QC plots for each sample
+
+On the following plots, the sample is indicated in X axis.
+
+Those plots show the distribution of the number of UMI (nUMI), the number of genes (ngenes) and the percentage of mitochondrial genes (percent_mito) in each cell (dot on plots).
+
+### UPN23
+
+```{r QC_UPN23}
+Seurat_UPN23 <- compute_percent_mito_seurat(Seurat_UPN23, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
+draw_QC_plots_seurat(Seurat_UPN23)
+draw_QC_plots_seurat_no_dots(Seurat_UPN23)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN23, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN23_filtered <- subset(Seurat_UPN23, subset = ngenes_filter | nUMI_filter | percent_mito_filter, invert = T)
+```
+
+### UPN23 after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN23_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN23_filtered)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN23_filtered, 
+                                 feature_to_plot = Seurat_UPN23_filtered@meta.data$nCount_RNA)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN23_filtered, 
+                                 feature_to_plot = Seurat_UPN23_filtered@meta.data$nFeature_RNA)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN23_filtered, 
+                                 feature_to_plot = Seurat_UPN23_filtered@meta.data$percent_mito)
+```
+
+
+### UPN29
+
+```{r QC_UPN29}
+Seurat_UPN29 <- compute_percent_mito_seurat(Seurat_UPN29, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
+draw_QC_plots_seurat(Seurat_UPN29)
+draw_QC_plots_seurat_no_dots(Seurat_UPN29)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN29, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN29_filtered <- subset(Seurat_UPN29, subset = ngenes_filter | nUMI_filter | percent_mito_filter, invert = T)
+```
+
+### UPN23 after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN29_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN29_filtered)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN29_filtered, 
+                                 feature_to_plot = Seurat_UPN29_filtered@meta.data$nCount_RNA)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN29_filtered, 
+                                 feature_to_plot = Seurat_UPN29_filtered@meta.data$nFeature_RNA)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN29_filtered, 
+                                 feature_to_plot = Seurat_UPN29_filtered@meta.data$percent_mito)
+```
+
+### UPN23 with cellhashing
+
+```{r QC_UPN23_cellhashing}
+Seurat_UPN23_UPN29_cellhashing_UPN23 <- compute_percent_mito_seurat(Seurat_UPN23_UPN29_cellhashing_UPN23, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
+draw_QC_plots_seurat(Seurat_UPN23_UPN29_cellhashing_UPN23)
+draw_QC_plots_seurat_no_dots(Seurat_UPN23_UPN29_cellhashing_UPN23)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN23_UPN29_cellhashing_UPN23, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN23_UPN29_cellhashing_UPN23_filtered <- subset(Seurat_UPN23_UPN29_cellhashing_UPN23, subset = ngenes_filter | nUMI_filter | percent_mito_filter, invert = T)
+```
+
+### UPN23 cell hashing after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, 
+                                 feature_to_plot = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered@meta.data$nCount_RNA)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, 
+                                 feature_to_plot = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered@meta.data$nFeature_RNA)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, 
+                                 feature_to_plot = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered@meta.data$percent_mito)
+```
+
+### UPN29 with cellhashing
+
+```{r QC_UPN29_cellhashing}
+Seurat_UPN23_UPN29_cellhashing_UPN29 <- compute_percent_mito_seurat(Seurat_UPN23_UPN29_cellhashing_UPN29, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
+draw_QC_plots_seurat(Seurat_UPN23_UPN29_cellhashing_UPN29)
+draw_QC_plots_seurat_no_dots(Seurat_UPN23_UPN29_cellhashing_UPN29)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN23_UPN29_cellhashing_UPN29, filter_numi = 20000, filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN23_UPN29_cellhashing_UPN29_filtered <- subset(Seurat_UPN23_UPN29_cellhashing_UPN29, subset = ngenes_filter | nUMI_filter | percent_mito_filter, invert = T)
+```
+
+### UPN29 cell hashing after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN29_filtered, 
+                                 feature_to_plot = Seurat_UPN23_UPN29_cellhashing_UPN29_filtered@meta.data$nCount_RNA)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN29_filtered, 
+                                 feature_to_plot = Seurat_UPN23_UPN29_cellhashing_UPN29_filtered@meta.data$nFeature_RNA)
+draw_QC_plot_seurat_with_boxplot(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN29_filtered, 
+                                 feature_to_plot = Seurat_UPN23_UPN29_cellhashing_UPN29_filtered@meta.data$percent_mito)
+```

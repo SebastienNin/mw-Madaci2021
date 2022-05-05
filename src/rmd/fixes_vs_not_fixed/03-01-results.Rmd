@@ -1,0 +1,118 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# Results
+
+## Summary | To be completed!
+
+The following table give global information on datasets.
+
+```{r}
+Seurat_object_list <- list(Seurat_UPN73, Seurat_UPN78, Seurat_UPN73_UPN78_cellhashing_UPN73, Seurat_UPN73_UPN78_cellhashing_UPN78)
+
+table_colnames <- c("Estimated number of cells", "Mean reads per cell", "Median genes per cell", "Sequencing saturation", "Read mapped confidently to genome", "Fraction reads in cells", "Total genes detected", "Median UMI counts per cell")
+Result_table <- data.frame(matrix(nrow = 4, ncol = 8), row.names = c("UPN73", "UPN78", "UPN73_cellhashing", "UPN78_cellhashing"))
+colnames(Result_table) <- table_colnames
+Result_table$`Estimated number of cells` <- sapply(Seurat_object_list, ncol)
+Result_table$`Mean reads per cell` <- sapply(Seurat_object_list, function(x){mean(colSums(x, slot = 'counts'))})
+Result_table$`Median genes per cell` <- sapply(Seurat_object_list, function(x){median(x$nFeature_RNA)})
+
+DT::datatable(Result_table)
+```
+
+## Some QC plots for each sample
+
+On the following plots, the sample is indicated in X axis.
+
+Those plots show the distribution of the number of UMI (nUMI), the number of genes (ngenes) and the percentage of mitochondrial genes (percent_mito) in each cell (dot on plots).
+
+### UPN73 fixed
+
+```{r QC_UPN73}
+Seurat_UPN73 <- compute_percent_mito_seurat(Seurat_UPN73)
+draw_QC_plots_seurat(Seurat_UPN73)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN73, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN73_filtered <- subset(Seurat_UPN73, subset = ngenes_filter | nUMI_filter | percent_mito_filter,
+                                invert = T)
+```
+
+### UPN73 after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN73_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_filtered)
+```
+
+### UPN78 fixed
+
+```{r QC_UPN78}
+Seurat_UPN78 <- compute_percent_mito_seurat(Seurat_UPN78)
+draw_QC_plots_seurat(Seurat_UPN78)
+draw_QC_plots_seurat_no_dots(Seurat_UPN78)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN78, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN78_filtered <- subset(Seurat_UPN78, subset = ngenes_filter | nUMI_filter | percent_mito_filter,
+                                invert = T)
+```
+
+### UPN78 after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN78_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN78_filtered)
+```
+
+### UPN73 cellhashing
+
+```{r QC_UPN73_cellhashing}
+Seurat_UPN73_UPN78_cellhashing_UPN73 <- compute_percent_mito_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73)
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN73)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN73_UPN78_cellhashing_UPN73, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 20)
+Seurat_UPN73_UPN78_cellhashing_UPN73_filtered <- subset(Seurat_UPN73_UPN78_cellhashing_UPN73, 
+                                                        subset = ngenes_filter | nUMI_filter | percent_mito_filter,
+                                                        invert = T)
+```
+
+### UPN73 cell hashing after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered)
+```
+
+### UPN78 cellhashing
+
+```{r QC_UPN78_cellhashing}
+Seurat_UPN73_UPN78_cellhashing_UPN78 <- compute_percent_mito_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78)
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN78)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN73_UPN78_cellhashing_UPN78, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 20)
+Seurat_UPN73_UPN78_cellhashing_UPN78_filtered <- subset(Seurat_UPN73_UPN78_cellhashing_UPN78, 
+                                                        subset = ngenes_filter | nUMI_filter | percent_mito_filter,
+                                                        invert = T)
+```
+
+### UPN78 cell hashing after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+```
+
+```{r}
+# Clean memory
+rm(Seurat_object_list, Seurat_UPN23, Seurat_UPN29, Seurat_UPN23_UPN29_cellhashing_UPN23, Seurat_UPN23_UPN29_cellhashing_UPN29, Seurat_UPN73, Seurat_UPN78, Seurat_UPN73_UPN78_cellhashing_UPN73, Seurat_UPN73_UPN78_cellhashing_UPN78)
+gc()
+```
+

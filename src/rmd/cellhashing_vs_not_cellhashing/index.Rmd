@@ -1,0 +1,246 @@
+---
+title: "Madaci2021 analysis"
+author: "Sebastien Nin" 
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::gitbook:
+    split_by: rmd 
+    toc_depth: 6
+    download: ["epub", "mobi"]
+    sharing:
+      facebook: false
+      twitter: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setKnitrChunkDefaultOptions, include=FALSE}
+eval_after <- c(
+  "fig.cap",
+  "fig.height",
+  "fig.width",
+  "out.height",
+  "out.width"
+)
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 10,
+  eval.after = eval_after,
+  cache = FALSE,
+  warning = FALSE,
+  cache.lazy = FALSE
+)
+```
+
+```{r loadLibraries, warning=FALSE, cache=FALSE}
+loadLibrary <- function(package) {
+  if (!require(basename(package), character.only = TRUE)) BiocManager::install(package, update = FALSE)
+  library(basename(package), character.only = TRUE)
+}
+
+packages <- c(
+  "data.table",
+  "pheatmap",
+  "ggplot2",
+  "ggpubr",
+  "ggrepel",
+  "reshape2",
+  "GGally",
+  "factoextra",
+  "gridExtra",
+  "plotly",
+  "patchwork",
+  "cowplot",
+  "DT",
+  "pheatmap",
+  "Seurat",
+  "yaml",
+  "dplyr",
+  "VennDiagram"
+)
+
+# BiocManager::install("SingleR")
+# BiocManager::install("celldex")
+
+library(celldex)
+library(SingleR)
+
+invisible(lapply(packages, loadLibrary))
+theme_set(theme_bw())
+```
+
+```{r loadFunctions, cache=F}
+# Retrieve the relative path used by Bookdown as output folder
+book_from_rmd <- read_yaml("_bookdown.yml")$output_dir
+mw_from_rmd <- sub("/[^\\.].*$", "", book_from_rmd)
+book_from_mw <- gsub("\\.\\./", "", book_from_rmd)
+dir.create(
+  file.path(book_from_rmd, "plots"),
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+# functions <- file.path(
+#   mw_from_rmd,
+#   "../mw-lib/src/r/functions",
+#   c(
+#     "produceFormattedDataTable.R",
+#     "annColToAnnColors.R",
+#     "getEnrichrFromGenes.R",
+#     "linkSmiToRmdBookDir.R"
+#   )
+# )
+# invisible(lapply(functions, source))
+```
+
+```{r loadCommonVars}
+symnumargs <- list(cutpoints = c(0, 1e-04, 0.001, 0.01, 0.05, 1), symbols = c("∗∗∗∗", "∗∗∗", "∗∗", "∗", "ns"))
+```
+
+```{r}
+# Process each Seurat object (normalization)
+normalize_seurat_object <- function(seurat_object){
+  normalized_seurat_object <- NormalizeData(seurat_object, normalization.method = "LogNormalize", scale.factor = 10000)
+  return(normalized_seurat_object)
+}
+
+perform_clustering_seurat <- function(seurat_obj){
+  seurat_obj <- NormalizeData(seurat_obj, normalization.method = "LogNormalize", scale.factor = 10000)
+  seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 2000)
+  seurat_obj <- ScaleData(seurat_obj, do.scale = F, features = rownames(seurat_obj))
+  seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
+  seurat_obj <- FindNeighbors(seurat_obj, dims = 1:15)
+  seurat_obj <- FindClusters(seurat_obj, resolution = 0.8)
+  seurat_obj <- RunUMAP(seurat_obj, dims = 1:15)
+}
+
+perform_DE_seurat <- function(seurat_obj){
+  DE_results <- FindAllMarkers(seurat_obj, min.pct = 0.2, only.pos = T, return.thresh = 0.05)
+  return(DE_results)
+}
+
+draw_top_10_heatmap <- function(seurat_obj, DE_table){
+  DE_table %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log2FC) -> top10
+  top_marker_heatmap <- DoHeatmap(seurat_obj, features = top10$gene, size = 4)
+  return(top_marker_heatmap)
+}
+
+compute_percent_mito_seurat <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 20000){
+  seurat_obj$percent_mito <- PercentageFeatureSet(seurat_obj, features = grep("^MT-", rownames(seurat_obj@assays$RNA@data)))
+  seurat_obj$percent_mito_filter <- seurat_obj$percent_mito > filter_percent_mito
+  seurat_obj$nUMI_filter <- seurat_obj$nCount_RNA > filter_numi
+  seurat_obj$ngenes_filter <- seurat_obj$nFeature_RNA > filter_ngenes
+  return(seurat_obj)
+}
+
+draw_QC_plots_seurat <- function(seurat_obj){
+  seurat_obj$nUMI <- seurat_obj$nCount_RNA
+  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
+  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"))
+  return(qc_plots)
+}
+
+draw_QC_plots_seurat_no_dots <- function(seurat_obj){
+  seurat_obj$nUMI <- seurat_obj$nCount_RNA
+  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
+  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"), pt.size = 0)
+  return(qc_plots)
+}
+
+# draw_QC_plot_seurat_with_boxplot <- function(seurat_obj){
+#   melt_data <- melt(seurat_obj@meta.data[,c("nCount_RNA", "nFeature_RNA", "percent_mito")], measure.vars = c("nCount_RNA", "nFeature_RNA", "percent_mito"))
+#   e <- ggplot(melt_data, aes(x = variable, y = value)) +
+#     geom_violin(aes(fill = variable), trim = FALSE) + 
+#     geom_boxplot(width = 0.2)+
+#     scale_fill_manual(values = c("#00AFBB", "#E7B800", "#FC4E07"))+
+#     theme(legend.position = "none") + facet_grid(.~variable)
+#   return(e)
+# }
+
+draw_QC_plot_seurat_with_boxplot <- function(seurat_obj, feature_to_plot){
+  qc_plot_with_boxplot <- ggplot(seurat_obj@meta.data, aes(x = orig.ident, y = feature_to_plot)) +
+    geom_violin(aes(fill = orig.ident), trim = FALSE) + 
+    geom_boxplot(width = 0.2, outlier.shape = NA)+
+    scale_fill_manual(values = c("#00AFBB"))+
+    theme(legend.position = "none")
+  return(qc_plot_with_boxplot)
+}
+
+ggviolin_color_outlier <- function(seurat_obj, column_for_points, column_for_color, title = "Violin plot"){
+  ggplot(seurat_obj@meta.data, aes(x = orig.ident, y = column_for_points)) + 
+    geom_violin(aes(fill = orig.ident)) + 
+    scale_fill_manual(values = "grey") + 
+    geom_jitter(aes(color = column_for_color)) + 
+    ggtitle(title)
+}
+
+draw_all_qc_plot_with_outlier <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 20000){
+  seurat_obj_func <- compute_percent_mito_seurat(seurat_obj, filter_percent_mito = filter_percent_mito, 
+                                                 filter_ngenes = filter_ngenes, filter_numi = filter_numi)
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$nCount_RNA, 
+                               column_for_color = seurat_obj_func$nUMI_filter, 
+                               title = paste0("Violin plot of number of UMI, blue dot represent outliers that will be removed")))
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$nFeature_RNA, 
+                               column_for_color = seurat_obj_func$ngenes_filter, 
+                               title = paste0("Violin plot of number of genes, blue dot represent outliers that will be removed")))
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$percent_mito, 
+                               column_for_color = seurat_obj_func$percent_mito_filter, 
+                               title = paste0("Violin plot of percentage of mitochondrial genes, blue dot represent outliers that will be removed")))
+}
+
+display_venn <- function(x, ...){
+  grid.newpage()
+  venn_object <- venn.diagram(x, filename = NULL, ...)
+  grid.draw(venn_object)
+}
+
+draw_umap_with_cell_number <- function(seurat_obj, grouping = "orig.ident", do_labels = F){
+  # Calculate number of cells per cluster from object@ident
+  cell.num <- table(seurat_obj@meta.data[, grouping])
+  
+  # Add cell number per cluster to cluster labels
+  # ClusterLabels = paste("Cluster", names(cell.num), paste0("(n = ", cell.num, ")"))
+  ClusterLabels = paste(names(cell.num), paste0("(n = ", cell.num, ")"))
+  
+  # Order legend labels in plot in the same order as 'ClusterLabels'
+  ClusterBreaks = names(cell.num)
+  
+  # Plot tSNE with new legend labels for clusters
+  UMAPPlot(object = seurat_obj, group.by = grouping, label = do_labels) +
+    scale_colour_discrete(breaks = ClusterBreaks, 
+                          labels = ClusterLabels) +
+    labs(x = "UMAP 1",
+         y = "UMAP 2")
+}
+
+draw_umap_with_cell_proportion <- function(seurat_obj, grouping = "orig.ident", do_labels = F){
+  # Calculate number of cells per cluster from object@ident
+  cell.num <- table(seurat_obj@meta.data[, grouping])/sum(table(seurat_obj@meta.data[, grouping]))
+  cell.num <- format(cell.num*100, digits = 3)
+  
+  # Add cell number per cluster to cluster labels
+  # ClusterLabels = paste("Cluster", names(cell.num), paste0("(n = ", cell.num, " %)"))
+  ClusterLabels = paste(names(cell.num), paste0("(n = ", cell.num, " %)"))
+  
+  # Order legend labels in plot in the same order as 'ClusterLabels'
+  ClusterBreaks = names(cell.num)
+  
+  # Plot tSNE with new legend labels for clusters
+  UMAPPlot(object = seurat_obj, group.by = grouping, label = do_labels) +
+    scale_colour_discrete(breaks = ClusterBreaks, 
+                          labels = ClusterLabels) +
+    labs(x = "UMAP 1",
+         y = "UMAP 2")
+}
+```
+# Abstract
+
+

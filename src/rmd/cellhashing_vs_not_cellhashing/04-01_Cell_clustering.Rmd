@@ -1,0 +1,37 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Cell clustering
+
+For each sample, we performed a clustering based on variable genes
+
+```{r}
+Seurat_object_list <- list(Seurat_UPN23_filtered, Seurat_UPN29_filtered, 
+                           Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, Seurat_UPN23_UPN29_cellhashing_UPN29_filtered)
+```
+
+```{r}
+# rm(Seurat_UPN23_filtered, Seurat_UPN29_filtered,
+# Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, Seurat_UPN23_UPN29_cellhashing_UPN29_filtered)
+gc()
+```
+
+
+```{r}
+Seurat_object_list_clustered <- lapply(Seurat_object_list, perform_clustering_seurat)
+DE_results_list <- lapply(Seurat_object_list_clustered, perform_DE_seurat)
+```
+
+```{r}
+dir.create("../../../out/cellhashing_vs_not_cellhashing/R_obj/", recursive = T, showWarnings = F)
+saveRDS(DE_results_list, file = "../../../out/cellhashing_vs_not_cellhashing/R_obj/DE_results_list.rds")
+```
+
+```{r}
+# Cleaning memory
+rm(Seurat_object_list)
+gc()
+```

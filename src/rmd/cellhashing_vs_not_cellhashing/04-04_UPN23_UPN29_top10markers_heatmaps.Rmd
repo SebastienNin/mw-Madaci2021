@@ -1,0 +1,88 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+### Top 10 marker genes by cluster and samples
+
+#### UPN 23 non cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN23_filtered_processed, DE_table = DE_results_list[[1]])
+print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[1]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
+#### UPN 29 non cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN29_filtered_processed, DE_table = DE_results_list[[2]])
+print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[2]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+#### UPN 23 cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, 
+                                      DE_table = DE_results_list[[3]])
+print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[3]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+#### UPN 29 cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed,
+                                      DE_table = DE_results_list[[4]])
+print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[4]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```

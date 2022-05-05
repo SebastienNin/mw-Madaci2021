@@ -1,0 +1,214 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+### Leukemia markers
+
+#### CD117
+
+```{r}
+gene <- "BRCA1"
+
+p1 <- FeaturePlot(Seurat_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN23")
+p2 <- FeaturePlot(Seurat_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN29")
+p3 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN23")
+p4 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN29")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+#### CD33
+
+```{r}
+gene <- "CD33"
+
+p1 <- FeaturePlot(Seurat_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN23")
+p2 <- FeaturePlot(Seurat_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN29")
+p3 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN23")
+p4 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN29")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+#### CD34
+
+```{r}
+gene <- "CD34"
+
+p1 <- FeaturePlot(Seurat_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN23")
+p2 <- FeaturePlot(Seurat_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN29")
+p3 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN23")
+p4 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN29")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+#### CD13
+
+```{r}
+gene <- "LTA4H"
+
+p1 <- FeaturePlot(Seurat_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN23")
+p2 <- FeaturePlot(Seurat_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN29")
+p3 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN23")
+p4 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN29")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p3)
+```
+
+#### CD36
+
+```{r}
+gene <- "CD36"
+
+p1 <- FeaturePlot(Seurat_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN23")
+p2 <- FeaturePlot(Seurat_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN29")
+p3 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN23")
+p4 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN29")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+#### CD64
+
+```{r}
+gene <- "FCGR1B"
+
+p1 <- FeaturePlot(Seurat_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN23")
+p2 <- FeaturePlot(Seurat_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN29")
+p3 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN23")
+p4 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN29")
+
+p1
+# p2
+p3
+# p4
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+#### CD11
+
+```{r}
+gene <- "ITGAM"
+
+p1 <- FeaturePlot(Seurat_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN23")
+p2 <- FeaturePlot(Seurat_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN29")
+p3 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN23")
+p4 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN29")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+#### CD4
+
+```{r}
+gene <- "CD4"
+
+p1 <- FeaturePlot(Seurat_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN23")
+p2 <- FeaturePlot(Seurat_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN29")
+p3 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN23")
+p4 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = gene, slot = "data", cols = c("grey", "red")) + ggtitle("Hashed UPN29")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+### Cell expressing Blast markers
+
+Here are the UMAP colored by the expression of BRCA1 (CD117), CD33, CD34, LTA4H (CD13), CD36, FCGR1B (CD64), ITGAM (CD11) and CD4 genes.
+
+```{r}
+leukemia_markers <- c("BRCA1", "CD33", "CD34", "LTA4H", "CD36", "FCGR1B", "ITGAM", "CD4")
+
+Seurat_UPN23_filtered_processed$perc_ALL_markers <-PercentageFeatureSet(Seurat_UPN23_filtered_processed,
+                                                                        features = leukemia_markers)
+Seurat_UPN29_filtered_processed$perc_ALL_markers <-PercentageFeatureSet(Seurat_UPN29_filtered_processed,
+                                                                        features = leukemia_markers)
+Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed$perc_ALL_markers <-PercentageFeatureSet(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = leukemia_markers)
+Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed$perc_ALL_markers <-PercentageFeatureSet(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = leukemia_markers)
+
+p1 <- FeaturePlot(Seurat_UPN23_filtered_processed, features = "perc_ALL_markers", slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN23")
+p2 <- FeaturePlot(Seurat_UPN29_filtered_processed, features = "perc_ALL_markers", slot = "data", cols = c("grey", "red")) + ggtitle("Non hashed UPN29")
+p3 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, features = "perc_ALL_markers", slot = "data", cols = c("grey", "red")) +
+  ggtitle("Hashed UPN23")
+p4 <- FeaturePlot(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, features = "perc_ALL_markers", slot = "data", cols = c("grey", "red")) +
+  ggtitle("Hashed UPN29")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+Here is a table with the number and percentage of cells expressing those markers.
+
+```{r}
+marker_df <- data.frame(nb_cells_expressing = rep(0, 4), 
+                        nb_cel_tot = rep(0,4),
+                        percent_expressing_markers = rep(0,4))
+rownames(marker_df) <- c("Non hashed UPN23", "Non hashed UPN29", "Hashed UPN23", "Hashed UPN29")
+marker_df$nb_cells_expressing <- c(sum(Seurat_UPN23_filtered_processed$perc_ALL_markers > 0),
+                                   sum(Seurat_UPN29_filtered_processed$perc_ALL_markers > 0),
+                                   sum(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed$perc_ALL_markers > 0),
+                                   sum(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed$perc_ALL_markers > 0))
+
+marker_df$nb_cel_tot <- c(ncol(Seurat_UPN23_filtered_processed), ncol(Seurat_UPN29_filtered_processed),
+                          ncol(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed),
+                          ncol(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed))
+
+marker_df$percent_expressing_markers <- c((sum(Seurat_UPN23_filtered_processed$perc_ALL_markers > 0)/ncol(Seurat_UPN23_filtered_processed))*100,
+                                          (sum(Seurat_UPN29_filtered_processed$perc_ALL_markers > 0) / ncol(Seurat_UPN29_filtered_processed))*100,
+                                          (sum(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed$perc_ALL_markers > 0)/ncol(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed))*100,
+                                          (sum(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed$perc_ALL_markers > 0)/ncol(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed))*100)
+```
+
+```{r}
+DT::datatable(marker_df)
+```
+
+```{r}
+# rm(Seurat_UPN23_filtered_processed, Seurat_UPN29_filtered_processed,
+#    Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed,
+#    Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed)
+rm(Seurat_UPN23_UPN29_cellhashing_norm, Seurat_UPN23_UPN29_cellhashing)
+gc()
+```

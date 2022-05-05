@@ -1,0 +1,841 @@
+---
+title: "Madaci2021 analysis"
+author: "Sebastien Nin" 
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  bookdown::gitbook:
+    split_by: rmd 
+    toc_depth: 6
+    download: ["epub", "mobi"]
+    sharing:
+      facebook: false
+      twitter: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setKnitrChunkDefaultOptions, include=FALSE}
+eval_after <- c(
+  "fig.cap",
+  "fig.height",
+  "fig.width",
+  "out.height",
+  "out.width"
+)
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 10,
+  eval.after = eval_after,
+  cache = FALSE,
+  warning = FALSE,
+  cache.lazy = FALSE
+)
+```
+
+```{r loadLibraries, warning=FALSE, cache=FALSE}
+loadLibrary <- function(package) {
+  if (!require(basename(package), character.only = TRUE)) BiocManager::install(package, update = FALSE)
+  library(basename(package), character.only = TRUE)
+}
+
+packages <- c(
+  "data.table",
+  "pheatmap",
+  "ggplot2",
+  "ggpubr",
+  "ggrepel",
+  "reshape2",
+  "GGally",
+  "factoextra",
+  "gridExtra",
+  "plotly",
+  "patchwork",
+  "cowplot",
+  "DT",
+  "pheatmap",
+  "Seurat",
+  "yaml",
+  "dplyr",
+  "VennDiagram"
+)
+
+invisible(lapply(packages, loadLibrary))
+theme_set(theme_bw())
+```
+
+```{r loadFunctions, cache=F}
+# Retrieve the relative path used by Bookdown as output folder
+book_from_rmd <- read_yaml("_bookdown.yml")$output_dir
+mw_from_rmd <- sub("/[^\\.].*$", "", book_from_rmd)
+book_from_mw <- gsub("\\.\\./", "", book_from_rmd)
+dir.create(
+  file.path(book_from_rmd, "plots"),
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+# functions <- file.path(
+#   mw_from_rmd,
+#   "../mw-lib/src/r/functions",
+#   c(
+#     "produceFormattedDataTable.R",
+#     "annColToAnnColors.R",
+#     "getEnrichrFromGenes.R",
+#     "linkSmiToRmdBookDir.R"
+#   )
+# )
+# invisible(lapply(functions, source))
+```
+
+```{r loadCommonVars}
+symnumargs <- list(cutpoints = c(0, 1e-04, 0.001, 0.01, 0.05, 1), symbols = c("∗∗∗∗", "∗∗∗", "∗∗", "∗", "ns"))
+```
+
+```{r}
+# Process each Seurat object (normalization)
+normalize_seurat_object <- function(seurat_object){
+  normalized_seurat_object <- NormalizeData(seurat_object, normalization.method = "LogNormalize", scale.factor = 10000)
+  return(normalized_seurat_object)
+}
+
+perform_clustering_seurat <- function(seurat_obj){
+  seurat_obj <- NormalizeData(seurat_obj, normalization.method = "LogNormalize", scale.factor = 10000)
+  seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 2000)
+  seurat_obj <- ScaleData(seurat_obj, do.scale = F, features = rownames(seurat_obj))
+  seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
+  seurat_obj <- FindNeighbors(seurat_obj, dims = 1:15)
+  seurat_obj <- FindClusters(seurat_obj, resolution = 0.8)
+  seurat_obj <- RunUMAP(seurat_obj, dims = 1:15)
+}
+
+perform_DE_seurat <- function(seurat_obj){
+  DE_results <- FindAllMarkers(seurat_obj, min.pct = 0.2, only.pos = T, return.thresh = 0.05)
+  return(DE_results)
+}
+
+draw_top_10_heatmap <- function(seurat_obj, DE_table){
+  DE_table %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log2FC) -> top10
+  top_marker_heatmap <- DoHeatmap(seurat_obj, features = top10$gene, size = 4)
+  return(top_marker_heatmap)
+}
+
+compute_percent_mito_seurat <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 4000){
+  seurat_obj$percent_mito <- PercentageFeatureSet(seurat_obj, features = grep("^MT-", rownames(seurat_obj@assays$RNA@data)))
+  seurat_obj$percent_mito_filter <- seurat_obj$percent_mito > filter_percent_mito
+  seurat_obj$nUMI_filter <- seurat_obj$nCount_RNA > filter_numi
+  seurat_obj$ngenes_filter <- seurat_obj$nFeature_RNA > filter_ngenes
+  return(seurat_obj)
+}
+
+draw_QC_plots_seurat <- function(seurat_obj){
+  seurat_obj$nUMI <- seurat_obj$nCount_RNA
+  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
+  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"))
+  return(qc_plots)
+}
+
+draw_QC_plots_seurat_no_dots <- function(seurat_obj){
+  seurat_obj$nUMI <- seurat_obj$nCount_RNA
+  seurat_obj$ngenes <- seurat_obj$nFeature_RNA
+  qc_plots <- VlnPlot(seurat_obj, features = c("nUMI", "ngenes", "percent_mito"), pt.size = 0)
+  return(qc_plots)
+}
+
+ggviolin_color_outlier <- function(seurat_obj, column_for_points, column_for_color, title = "Violin plot"){
+  ggplot(seurat_obj@meta.data, aes(x = orig.ident, y = column_for_points)) + 
+    geom_violin(aes(fill = orig.ident)) + 
+    scale_fill_manual(values = "grey") + 
+    geom_jitter(aes(color = column_for_color)) + 
+    ggtitle(title)
+}
+
+draw_all_qc_plot_with_outlier <- function(seurat_obj, filter_percent_mito= 25, filter_ngenes = 2000, filter_numi = 4000){
+  seurat_obj_func <- compute_percent_mito_seurat(seurat_obj, filter_percent_mito = filter_percent_mito, 
+                                                 filter_ngenes = filter_ngenes, filter_numi = filter_numi)
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$nCount_RNA, 
+                               column_for_color = seurat_obj_func$nUMI_filter, 
+                               title = paste0("Violin plot of number of UMI, blue dot represent outliers that will be removed")))
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$nFeature_RNA, 
+                               column_for_color = seurat_obj_func$ngenes_filter, 
+                               title = paste0("Violin plot of number of genes, blue dot represent outliers that will be removed")))
+  print(ggviolin_color_outlier(seurat_obj_func, 
+                               column_for_points = seurat_obj_func$percent_mito, 
+                               column_for_color = seurat_obj_func$percent_mito_filter, 
+                               title = paste0("Violin plot of percentage of mitochondrial genes, blue dot represent outliers that will be removed")))
+}
+
+display_venn <- function(x, ...){
+  grid.newpage()
+  venn_object <- venn.diagram(x, filename = NULL, ...)
+  grid.draw(venn_object)
+}
+```
+# Abstract
+
+
+
+<!--chapter:end:index.Rmd-->
+
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# Methods
+
+Raw data were processed using cellranger 6.0.2.
+
+The sample CBF (non hashed) has been sequenced two times due to a low cell recovery on first sequencing.
+
+Cell hashing for CBF and FLT3 sample was sequenced two times.
+
+Fixed sample P8 was sequenced two times due to low cell recovery.
+
+For runs sequenced two times, cellranger count was parametered in order to take two input run  [into account (see end of page)](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/count).
+
+Single-cell data are processed using the Seurat R package (Seurat version 4.0.4, R version 4.1.1)
+
+The *Read10X* function from Seurat can read *cellranger count* output and convert it into a matrix.
+
+```{r loading_data}
+UPN73 <- Read10X(data.dir = "../../../out/cellranger/count_--sample_3_P8bis_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_378_NS500-286_06-07-2021_RC/Run_378/outs/filtered_feature_bc_matrix/")
+UPN78 <- Read10X(data.dir = "../../../out/cellranger/count_--sample_P13_ARNm_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_372_NS500-280_17-05-2021_RC/Run_372/outs/filtered_feature_bc_matrix")
+UPN73_UPN78_cellhashing <- Read10X("../../../out/cellranger/count_--sample_mRNA_Hashtag_R342_GRCh38-2020-A/cellranger/mkfastq/gpfs/tgml/reads/NS500_output_from_sept_2020/Run_342_NS500-249_11-12-2020_LM/Run_342/outs/filtered_feature_bc_matrix/")
+```
+
+The *CreateSeuratObject* function convert the matrix into a Seurat object that will store analysis. Two parameters are set when creating Seurat object:
+
+* min.cells = 3 (default) -> Include features (genes) detected in at least this many cells.
+* min.features = 200 (default) -> Include cells where at least this many features (genes) are detected.
+
+```{r seurat_object_for_non_hashed}
+# Create seurat object for non multiplexed data.
+# Seurat_UPN73_UPN78_cellhashing <- CreateSeuratObject(counts = UPN73_UPN78_cellhashing, project = "UPN73_UPN78_cellhashing", min.cells = 3, min.features = 200)
+# Seurat_UPN73 <- CreateSeuratObject(counts = UPN73, project = "UPN73", min.cells = 3, min.features = 200)
+# Seurat_UPN78 <- CreateSeuratObject(counts = UPN78, project = "UPN78", min.cells = 3, min.features = 200)
+Seurat_UPN73_UPN78_cellhashing <- CreateSeuratObject(counts = UPN73_UPN78_cellhashing, project = "UPN73_UPN78_cellhashing", min.cells = 0, min.features = 0)
+Seurat_UPN73 <- CreateSeuratObject(counts = UPN73, project = "UPN73", min.cells = 0, min.features = 0)
+Seurat_UPN78 <- CreateSeuratObject(counts = UPN78, project = "UPN78", min.cells = 0, min.features = 0)
+
+rm(UPN73_UPN78_cellhashing, UPN73, UPN78)
+```
+
+HTO data are processed using the [cite-seq count, v1.4.3](https://hoohm.github.io/CITE-seq-Count/) tool. Results are read using the *Read10X* from Seurat.
+
+Only common cell barcode originating from HTO (from cite-seq count) and mRNA (from cellranger) data are kept. Those barcodes represent cells detected by cellranger and for which an HTO has been attributed.
+
+```{r read_citeseq_count_information}
+# Read umi_count tables for each sample
+HTO_UPN73_UPN78_cellhashing <- Read10X(data.dir = "../../../out/cite-seq_count/Run_342/umi_count/", gene.column = 1)
+# Remove Hashtag barcode from HTO rownames
+rownames(HTO_UPN73_UPN78_cellhashing) <- gsub(pattern = "-.*", replacement = "", x = rownames(HTO_UPN73_UPN78_cellhashing))
+# Add a "-1" at the end of cell barcodes for HTO data to have similar names as mRNA data
+colnames(HTO_UPN73_UPN78_cellhashing) <- paste0(colnames(HTO_UPN73_UPN78_cellhashing),"-1")
+# Filter cells that are detected in both mRNA and HTO
+joint.bcs_UPN73_UPN78_cellhashing <- intersect(colnames(Seurat_UPN73_UPN78_cellhashing), colnames(HTO_UPN73_UPN78_cellhashing))
+# Subset mRNA seurat object to shared cell barcodes
+Seurat_UPN73_UPN78_cellhashing <- subset(x = Seurat_UPN73_UPN78_cellhashing, cells = joint.bcs_UPN73_UPN78_cellhashing)
+```
+
+Finally, the HTO matrices are normalized using the Centered Log-Ratio method (CLR). This method is recommended by Seurat developers. Then, the *MULTIseqDemux* function is used to assign HTO name to cells. For this function, the parameter *autoThresh = TRUE* was used. This parameter enable the function to perform automated threshold finding to define the best quantile.
+
+```{r HTO_demultiplexing}
+HTO_UPN73_UPN78_cellhashing_joints_bcs <- HTO_UPN73_UPN78_cellhashing[grep("HTO", rownames(HTO_UPN73_UPN78_cellhashing)), colnames(Seurat_UPN73_UPN78_cellhashing)]
+rownames(HTO_UPN73_UPN78_cellhashing_joints_bcs) <- c("UPN73-cellhashing", "UPN78-cellhashing")
+Seurat_UPN73_UPN78_cellhashing[["HTO"]] <- CreateAssayObject(counts = HTO_UPN73_UPN78_cellhashing_joints_bcs)
+# Normalize HTO data, here we use centered log-ratio (CLR) transformation
+Seurat_UPN73_UPN78_cellhashing <- NormalizeData(Seurat_UPN73_UPN78_cellhashing, assay = "HTO", normalization.method = "CLR", margin = 1)
+# Perform HTO demultiplexing
+Seurat_UPN73_UPN78_cellhashing <- MULTIseqDemux(Seurat_UPN73_UPN78_cellhashing, assay = "HTO", autoThresh = TRUE)
+
+# Subset Seurat_UPN73_UPN78_cellhashing for the 2 HTO
+Seurat_UPN73_UPN78_cellhashing_UPN73 <- subset(Seurat_UPN73_UPN78_cellhashing, cells = colnames(Seurat_UPN73_UPN78_cellhashing)[Seurat_UPN73_UPN78_cellhashing$MULTI_ID == "UPN73-cellhashing"])
+Seurat_UPN73_UPN78_cellhashing_UPN78 <- subset(Seurat_UPN73_UPN78_cellhashing, cells = colnames(Seurat_UPN73_UPN78_cellhashing)[Seurat_UPN73_UPN78_cellhashing$MULTI_ID == "UPN78-cellhashing"])
+```
+
+```{r}
+# Write HTO assignation to csv files
+write.csv(Seurat_UPN73_UPN78_cellhashing@meta.data[,c("orig.ident", "MULTI_ID")], file = "../../../out/csv/HTO_UPN73_UPN78.csv")
+```
+
+```{r}
+#Clean memory
+rm(HTO_UPN73_UPN78_cellhashing, HTO_UPN73_UPN78_cellhashing_joints_bcs, joint.bcs_UPN73_UPN78_cellhashing)
+
+gc()
+```
+
+
+<!--chapter:end:02-methods.Rmd-->
+
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# Results
+
+## Summary | To be completed!
+
+The following table give global information on datasets.
+
+```{r}
+Seurat_object_list <- list(Seurat_UPN73, Seurat_UPN78, Seurat_UPN73_UPN78_cellhashing_UPN73, Seurat_UPN73_UPN78_cellhashing_UPN78)
+
+table_colnames <- c("Estimated number of cells", "Mean reads per cell", "Median genes per cell", "Sequencing saturation", "Read mapped confidently to genome", "Fraction reads in cells", "Total genes detected", "Median UMI counts per cell")
+Result_table <- data.frame(matrix(nrow = 4, ncol = 8), row.names = c("UPN73", "UPN78", "UPN73_cellhashing", "UPN78_cellhashing"))
+colnames(Result_table) <- table_colnames
+Result_table$`Estimated number of cells` <- sapply(Seurat_object_list, ncol)
+Result_table$`Mean reads per cell` <- sapply(Seurat_object_list, function(x){mean(colSums(x, slot = 'counts'))})
+Result_table$`Median genes per cell` <- sapply(Seurat_object_list, function(x){median(x$nFeature_RNA)})
+
+DT::datatable(Result_table)
+```
+
+## Some QC plots for each sample
+
+On the following plots, the sample is indicated in X axis.
+
+Those plots show the distribution of the number of UMI (nUMI), the number of genes (ngenes) and the percentage of mitochondrial genes (percent_mito) in each cell (dot on plots).
+
+### UPN73 fixed
+
+```{r QC_UPN73}
+Seurat_UPN73 <- compute_percent_mito_seurat(Seurat_UPN73)
+draw_QC_plots_seurat(Seurat_UPN73)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN73, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN73_filtered <- subset(Seurat_UPN73, subset = ngenes_filter | nUMI_filter | percent_mito_filter,
+                                invert = T)
+```
+
+### UPN73 after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN73_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_filtered)
+```
+
+### UPN78 fixed
+
+```{r QC_UPN78}
+Seurat_UPN78 <- compute_percent_mito_seurat(Seurat_UPN78)
+draw_QC_plots_seurat(Seurat_UPN78)
+draw_QC_plots_seurat_no_dots(Seurat_UPN78)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN78, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 25)
+Seurat_UPN78_filtered <- subset(Seurat_UPN78, subset = ngenes_filter | nUMI_filter | percent_mito_filter,
+                                invert = T)
+```
+
+### UPN78 after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN78_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN78_filtered)
+```
+
+### UPN73 cellhashing
+
+```{r QC_UPN73_cellhashing}
+Seurat_UPN73_UPN78_cellhashing_UPN73 <- compute_percent_mito_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73)
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN73)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN73_UPN78_cellhashing_UPN73, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 20)
+Seurat_UPN73_UPN78_cellhashing_UPN73_filtered <- subset(Seurat_UPN73_UPN78_cellhashing_UPN73, 
+                                                        subset = ngenes_filter | nUMI_filter | percent_mito_filter,
+                                                        invert = T)
+```
+
+### UPN73 cell hashing after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered)
+```
+
+### UPN78 cellhashing
+
+```{r QC_UPN78_cellhashing}
+Seurat_UPN73_UPN78_cellhashing_UPN78 <- compute_percent_mito_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78)
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN78)
+
+draw_all_qc_plot_with_outlier(Seurat_UPN73_UPN78_cellhashing_UPN78, filter_numi = 20000, 
+                              filter_ngenes = 4000, filter_percent_mito = 20)
+Seurat_UPN73_UPN78_cellhashing_UPN78_filtered <- subset(Seurat_UPN73_UPN78_cellhashing_UPN78, 
+                                                        subset = ngenes_filter | nUMI_filter | percent_mito_filter,
+                                                        invert = T)
+```
+
+### UPN78 cell hashing after filtering
+
+```{r}
+draw_QC_plots_seurat(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+draw_QC_plots_seurat_no_dots(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+```
+
+```{r}
+# Clean memory
+rm(Seurat_object_list, Seurat_UPN23, Seurat_UPN29, Seurat_UPN23_UPN29_cellhashing_UPN23, Seurat_UPN23_UPN29_cellhashing_UPN29, Seurat_UPN73, Seurat_UPN78, Seurat_UPN73_UPN78_cellhashing_UPN73, Seurat_UPN73_UPN78_cellhashing_UPN78)
+gc()
+```
+
+
+<!--chapter:end:03-01-results.Rmd-->
+
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Correlation between cell hashing and non cell hashing fixed samples
+
+### Plots using mean expression of genes found in all samples
+
+For this plot, I subset each sample to only common genes found in all samples.
+
+```{r}
+# Get common genes in compared datasets
+UPN73_UPN78_tot_genes <- list(rownames(Seurat_UPN73_filtered@assays$RNA@data),
+                              rownames(Seurat_UPN78_filtered@assays$RNA@data),
+                              rownames(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered@assays$RNA@data),
+                              rownames(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered@assays$RNA@data))
+UPN73_UPN78_genes <- Reduce(f = intersect, x = UPN73_UPN78_tot_genes)
+
+UPN73_UPN78_tot_genes_Seurat_list <- list(Seurat_UPN73_filtered, Seurat_UPN78_filtered, 
+                                          Seurat_UPN73_UPN78_cellhashing_UPN73_filtered,
+                                          Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+
+UPN73_UPN78_Seurat_list_UPN73_UPN78_genes <- lapply(UPN73_UPN78_tot_genes_Seurat_list, subset, features = UPN73_UPN78_genes)
+
+UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized <- lapply(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes, normalize_seurat_object)
+
+na_length <- rep(NA, length(UPN73_UPN78_genes))
+mean_df <- data.frame(UPN73_cellhashing = na_length, UPN78_cellhashing = na_length, 
+                      UPN73_fixed = na_length, UPN78_fixed = na_length, row.names = UPN73_UPN78_genes)
+mean_df$UPN73_cellhashing <- rowMeans(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized[[1]]@assays$RNA@data)
+mean_df$UPN78_cellhashing <- rowMeans(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized[[2]]@assays$RNA@data)
+mean_df$UPN73_fixed <- rowMeans(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized[[3]]@assays$RNA@data)
+mean_df$UPN78_fixed <- rowMeans(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized[[4]]@assays$RNA@data)
+ggpairs(mean_df) + ggtitle("Scatter plot matrix of mean expression of each gene in all cells")
+```
+
+<!-- ### Plots using random cells -->
+
+<!-- For the following plots, I chose random cells to draw gene expression. -->
+
+<!-- ```{r} -->
+<!-- # Generate 10 random number between 1 and the min number of cell in compared datasets -->
+<!-- for(random in sample(1:min(sapply(P8_P13_tot_genes_Seurat_list, ncol)), 10)){ -->
+<!--   na_length <- rep(NA, length(P8_P13_genes)) -->
+<!--   loop_df <- data.frame(UPN73_cellhashing = na_length, UPN78_cellhashing = na_length,  -->
+<!--                         UPN73_fixed = na_length, UPN78_fixed = na_length, row.names = P8_P13_genes) -->
+<!--   loop_df$UPN73_cellhashing <- P8_P13_Seurat_list_P8_P13_genes_normalized[[1]]@assays$RNA@data[,random] -->
+<!--   loop_df$UPN78_cellhashing <- P8_P13_Seurat_list_P8_P13_genes_normalized[[2]]@assays$RNA@data[,random] -->
+<!--   loop_df$UPN73_fixed <- P8_P13_Seurat_list_P8_P13_genes_normalized[[3]]@assays$RNA@data[,random] -->
+<!--   loop_df$UPN78_fixed <- P8_P13_Seurat_list_P8_P13_genes_normalized[[4]]@assays$RNA@data[,random] -->
+<!--   print(ggpairs(loop_df) + ggtitle("Scatter plot matrix of expression of each gene randomly selected cells")) -->
+<!-- } -->
+<!-- ``` -->
+
+
+```{r}
+#Clean memory
+rm(UPN73_UPN78_Seurat_list_UPN73_UPN78_genes_normalized,
+   UPN73_UPN78_Seurat_list_UPN73_UPN78_genes,
+   UPN73_UPN78_tot_genes_Seurat_list)
+rm(mean_df)
+# rm(Seurat_UPN73_filtered, Seurat_UPN78_filtered, 
+#    Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, 
+#    Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+gc()
+```
+
+<!--chapter:end:03-02_correlation_analysis_cellhashing_vs_non_cellhashing_fixed.Rmd-->
+
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Cell clustering
+
+For each sample, we performed a clustering based on variable genes
+
+```{r}
+Seurat_object_list <- list(Seurat_UPN73_filtered, Seurat_UPN78_filtered,
+                           Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+```
+
+```{r}
+rm(Seurat_UPN73_filtered, Seurat_UPN78_filtered,
+   Seurat_UPN73_UPN78_cellhashing_UPN73_filtered, Seurat_UPN73_UPN78_cellhashing_UPN78_filtered)
+gc()
+```
+
+
+```{r}
+Seurat_object_list_clustered <- lapply(Seurat_object_list, perform_clustering_seurat)
+DE_results_list <- lapply(Seurat_object_list_clustered, perform_DE_seurat)
+```
+
+```{r}
+dir.create("../../../out/fixed_vs_not_fixed/R_obj/", recursive = T)
+saveRDS(DE_results_list, file = "../../../out/fixed_vs_not_fixed/R_obj/DE_results_list.rds")
+```
+
+```{r}
+# Cleaning memory
+rm(Seurat_object_list)
+gc()
+```
+
+<!--chapter:end:04-01_Cell_clustering.Rmd-->
+
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+### Hashed samples UPN73 and UPN78
+
+```{r}
+Idents(Seurat_UPN73_UPN78_cellhashing) <- Seurat_UPN73_UPN78_cellhashing$MULTI_ID
+Seurat_UPN73_UPN78_cellhashing_norm <- subset(Seurat_UPN73_UPN78_cellhashing, 
+                                              idents = c("UPN73-cellhashing", "UPN78-cellhashing"))
+Seurat_UPN73_UPN78_cellhashing_norm <- normalize_seurat_object(Seurat_UPN73_UPN78_cellhashing_norm)
+Seurat_UPN73_UPN78_cellhashing_norm <- perform_clustering_seurat(Seurat_UPN73_UPN78_cellhashing_norm)
+DimPlot(Seurat_UPN73_UPN78_cellhashing_norm) + ggtitle("UMAP of UPN73 and UPN78 cell hashing colored by cluster")
+DimPlot(Seurat_UPN73_UPN78_cellhashing_norm, group.by = "MULTI_ID") + ggtitle("UMAP of UPN73 and UPN78 cell hashing colored by samples")
+```
+
+### UPN73 and UPN78 samples
+
+```{r}
+# Perform on non normalized data
+UPN73_UPN78_samples <- c(5,6,7,8)
+# Seurat_object_list_clustered[UPN73_UPN78_samples]
+
+Seurat_UPN73_filtered_processed <- Seurat_object_list_clustered[[5]]
+Seurat_UPN78_filtered_processed <- Seurat_object_list_clustered [[6]]
+Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed <- Seurat_object_list_clustered[[7]]
+Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed <- Seurat_object_list_clustered[[8]]
+
+p1 <- DimPlot(Seurat_UPN73_filtered_processed) + ggtitle("Non hashed UPN73")
+p2 <- DimPlot(Seurat_UPN78_filtered_processed) + ggtitle("Non hashed UPN78")
+p3 <- DimPlot(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed) + ggtitle("Hashed UPN73")
+p4 <- DimPlot(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed) + ggtitle("Hashed UPN78")
+
+p1
+p2
+p3
+p4
+
+grid.arrange(p1,p2,p3,p4)
+
+# features <- SelectIntegrationFeatures(object.list = Seurat_object_list_clustered[UPN73_UPN78_samples])
+# immune.anchors <- FindIntegrationAnchors(object.list = Seurat_object_list_clustered[UPN73_UPN78_samples], anchor.features = features)
+# # this command creates an 'integrated' data assay
+# immune.combined <- IntegrateData(anchorset = immune.anchors)
+# 
+# DefaultAssay(immune.combined) <- "integrated"
+# 
+# # Run the standard workflow for visualization and clustering
+# immune.combined <- ScaleData(immune.combined, verbose = FALSE)
+# immune.combined <- RunPCA(immune.combined, npcs = 30, verbose = FALSE)
+# immune.combined <- RunUMAP(immune.combined, reduction = "pca", dims = 1:30)
+# immune.combined <- FindNeighbors(immune.combined, reduction = "pca", dims = 1:30)
+# immune.combined <- FindClusters(immune.combined, resolution = 0.5)
+```
+
+### Top 10 marker genes by cluster and samples
+
+#### UPN 73 non cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_filtered_processed, DE_table = DE_results_list[[5]])
+print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[5]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
+#### UPN 78 non cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN78_filtered_processed, DE_table = DE_results_list[[6]])
+print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[6]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
+#### UPN 73 cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed, 
+                                      DE_table = DE_results_list[[7]])
+print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[7]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
+#### UPN 78 cell hashing
+
+```{r}
+top_10_heatmap <- draw_top_10_heatmap(seurat_obj = Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed,
+                                      DE_table = DE_results_list[[8]])
+print(top_10_heatmap)
+```
+
+```{r}
+datatable(DE_results_list[[8]][, c("p_val", "avg_log2FC", "p_val_adj", "cluster")],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+
+```{r}
+# FeaturePlot(Seurat_FTL3_R252_processed, features = (c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9")))
+# 
+# res_genes_expressing_cells <- GetAssayData(Seurat_FTL3_R252_processed, slot = "data")[,colSums(GetAssayData(Seurat_FTL3_R252_processed, slot = "data")[c("PGP", "ABCC1", "GSTK1", "BCL2", "CLIP1", "TGFB1", "LGALS9", "CD34", "IL2RA"),])>1]
+
+```
+
+```{r}
+saveRDS(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed, file = "../../../out/R_obj/UPN78_cellhashing_obj_processed.rds")
+saveRDS(Seurat_UPN78_filtered_processed, file = "../../../out/R_obj/UPN78_obj_processed.rds")
+saveRDS(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed, file = "../../../out/R_obj/UPN73_cellhashing_obj_processed.rds")
+saveRDS(Seurat_UPN73_filtered_processed, file = "../../../out/R_obj/UPN73_obj_processed.rds")
+```
+
+```{r}
+rm(Seurat_UPN73_filtered_processed, Seurat_UPN78_filtered_processed,
+   Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed,
+   Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed)
+rm(Seurat_object_list_clustered)
+rm(Seurat_UPN73_UPN78_cellhashing, Seurat_UPN73_UPN78_cellhashing_norm)
+gc()
+```
+
+<!--chapter:end:04-02_UPN73_UPN78_UMAP.Rmd-->
+
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+### Comparison of DE genes for each sample.
+
+#### UPN73
+
+```{r}
+UPN73_fixed_unique_genes <- unique(DE_results_list[[1]]$gene)
+UPN73_cellhashing_unique_genes <- unique(DE_results_list[[3]]$gene)
+
+grid.draw(venn.diagram(x = list(UPN73_fixed_unique_genes,  UPN73_cellhashing_unique_genes), filename = NULL,
+                       category.names = c("UPN73 cellhashing", "UPN73 fixed"),
+                       # Cercles
+                       lwd = 2,
+                       lty = 'blank',
+                       fill = c("#999999", "#E69F00"),
+                       # Nombres
+                       cex = .9,
+                       fontface = "italic",
+                       # Noms des groupes
+                       cat.cex = 1,
+                       cat.fontface = "bold",
+                       cat.default.pos = "outer",
+                       cat.dist = c(0.055, 0.055)
+))
+
+# display_venn(
+#   x = list(UPN73_fixed_unique_genes, UPN73_cellhashing_unique_genes),
+#   category.names = c("UPN73 fixed", 
+#                      "UPN73 cellhashing"),
+#   # Cercles
+#   lwd = 2,
+#   lty = 'blank',
+#   fill = c("#999999", "#E69F00"),
+#   # Nombres
+#   cex = .9,
+#   fontface = "italic",
+#   # Noms des groupes
+#   cat.cex = 1,
+#   cat.fontface = "bold",
+#   cat.default.pos = "outer",
+#   cat.dist = c(0.055, 0.055)
+# )
+```
+
+##### Gene list common in both conditions
+
+```{r}
+datatable(data.frame(Common_genes = intersect(UPN73_fixed_unique_genes, UPN73_cellhashing_unique_genes)),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+##### Gene list specific to fixed cells
+
+```{r}
+datatable(data.frame(Non_cellhashing_genes = UPN73_fixed_unique_genes[!UPN73_fixed_unique_genes %in% UPN73_cellhashing_unique_genes]),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+##### Gene list specific to cell hashing
+
+```{r}
+datatable(data.frame(Cellhashing_genes = UPN73_cellhashing_unique_genes[!UPN73_cellhashing_unique_genes %in% UPN73_fixed_unique_genes]),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+#### UPN78
+
+```{r}
+UPN78_fixed_unique_genes <- unique(DE_results_list[[2]]$gene)
+UPN78_cellhashing_unique_genes <- unique(DE_results_list[[4]]$gene)
+
+display_venn(
+  x = list(UPN78_fixed_unique_genes, UPN78_cellhashing_unique_genes),
+  category.names = c("UPN78 fixed", 
+                     "UPN78 cellhashing"),
+  # Cercles
+  lwd = 2,
+  lty = 'blank',
+  fill = c("#999999", "#E69F00"),
+  # Nombres
+  cex = .9,
+  fontface = "italic",
+  # Noms des groupes
+  cat.cex = 1,
+  cat.fontface = "bold",
+  cat.default.pos = "outer",
+  cat.dist = c(0.055, 0.055)
+)
+```
+
+##### Gene list common in both conditions
+
+```{r}
+datatable(data.frame(Common_genes = intersect(UPN78_fixed_unique_genes, UPN78_cellhashing_unique_genes)),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+##### Gene list specific to fixed cells
+
+```{r}
+datatable(data.frame(Non_cellhashing_genes = UPN78_fixed_unique_genes[!UPN78_fixed_unique_genes %in% UPN78_cellhashing_unique_genes]),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+##### Gene list specific to cell hashing
+
+```{r}
+datatable(data.frame(Cellhashing_genes = UPN78_cellhashing_unique_genes[!UPN78_cellhashing_unique_genes %in% UPN78_fixed_unique_genes]),
+          extensions = "Buttons", options = list(
+            dom = "Bfrtip",
+            buttons =
+              list(list(
+                extend = "collection",
+                buttons = c("csv", "excel"),
+                text = "Download"
+              ))
+          ))
+```
+
+<!--chapter:end:04-04_Comparison_of_DE_genes_lists.Rmd-->
+

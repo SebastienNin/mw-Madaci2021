@@ -1,0 +1,130 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+### Comparison of cell population in each clusters.
+
+In order to detect celltypes in all datasets, I used the [celldex](http://bioconductor.org/packages/release/data/experiment/html/celldex.html) package to retrieve celltype datasets and the [SingleR](https://bioconductor.org/packages/release/bioc/html/SingleR.html) algorithm to detect celltypes in our datasets.
+
+#### UPN23
+
+```{r}
+hpca.se <- HumanPrimaryCellAtlasData()
+hpca.se
+
+## -----------------------------------------------------------------------------
+pred.hesc <- SingleR(test = Seurat_UPN23_filtered_processed@assays$RNA@data, ref = hpca.se, assay.type.test=1,
+                     labels = hpca.se$label.main)
+
+all.markers <- metadata(pred.hesc)$de.genes
+Seurat_UPN23_filtered_processed$labels <- pred.hesc$labels
+# plotScoreHeatmap(pred.hesc)
+# Idents(Seurat_UPN23_filtered_processed) <- Seurat_UPN23_filtered_processed$labels
+
+draw_umap_with_cell_number(Seurat_UPN23_filtered_processed, grouping = "labels", do_labels = T)
+draw_umap_with_cell_number(Seurat_UPN23_filtered_processed, grouping = "labels", do_labels = F)
+
+draw_umap_with_cell_proportion(Seurat_UPN23_filtered_processed, grouping = "labels", do_labels = T)
+draw_umap_with_cell_proportion(Seurat_UPN23_filtered_processed, grouping = "labels", do_labels = F)
+```
+
+#### UPN29
+
+```{r}
+pred.hesc <- SingleR(test = Seurat_UPN29_filtered_processed@assays$RNA@data, ref = hpca.se, assay.type.test=1,
+                     labels = hpca.se$label.main)
+
+all.markers <- metadata(pred.hesc)$de.genes
+Seurat_UPN29_filtered_processed$labels <- pred.hesc$labels
+# plotScoreHeatmap(pred.hesc)
+# Idents(Seurat_UPN29_filtered_processed) <- Seurat_UPN29_filtered_processed$labels
+
+draw_umap_with_cell_number(Seurat_UPN29_filtered_processed, grouping = "labels", do_labels = T)
+draw_umap_with_cell_number(Seurat_UPN29_filtered_processed, grouping = "labels", do_labels = F)
+
+draw_umap_with_cell_proportion(Seurat_UPN29_filtered_processed, grouping = "labels", do_labels = T)
+draw_umap_with_cell_proportion(Seurat_UPN29_filtered_processed, grouping = "labels", do_labels = F)
+```
+
+#### UPN23_cellhashing
+
+```{r}
+pred.hesc <- SingleR(test = Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed@assays$RNA@data, ref = hpca.se, assay.type.test=1,
+                     labels = hpca.se$label.main)
+
+all.markers <- metadata(pred.hesc)$de.genes
+Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed$labels <- pred.hesc$labels
+# plotScoreHeatmap(pred.hesc)
+# Idents(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed) <- Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed$labels
+
+draw_umap_with_cell_number(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, grouping = "labels", do_labels = T)
+draw_umap_with_cell_number(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, grouping = "labels", do_labels = F)
+
+draw_umap_with_cell_proportion(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, grouping = "labels", do_labels = T)
+draw_umap_with_cell_proportion(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed, grouping = "labels", do_labels = F)
+```
+
+#### UPN29_cellhashing
+
+```{r}
+pred.hesc <- SingleR(test = Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed@assays$RNA@data, ref = hpca.se, assay.type.test=1,
+                     labels = hpca.se$label.main)
+
+all.markers <- metadata(pred.hesc)$de.genes
+Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed$labels <- pred.hesc$labels
+# plotScoreHeatmap(pred.hesc)
+# Idents(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed) <- Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed$labels
+
+draw_umap_with_cell_number(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, grouping = "labels", do_labels = T)
+draw_umap_with_cell_number(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, grouping = "labels", do_labels = F)
+
+draw_umap_with_cell_proportion(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, grouping = "labels", do_labels = T)
+draw_umap_with_cell_proportion(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed, grouping = "labels", do_labels = F)
+```
+
+
+
+```{r}
+Seurat_UPN29_filtered_processed_labels_melt <- melt(table(Seurat_UPN29_filtered_processed$labels))
+Seurat_UPN29_filtered_processed_labels_melt$Sample <- "UPN29"
+# Seurat_UPN29_filtered_processed_labels_melt$Cumsum <- cumsum(Seurat_UPN29_filtered_processed_labels_melt$value)
+Seurat_UPN23_filtered_processed_labels_melt <- melt(table(Seurat_UPN23_filtered_processed$labels))
+Seurat_UPN23_filtered_processed_labels_melt$Sample <- "UPN23"
+# Seurat_UPN23_filtered_processed_labels_melt$Cumsum <- cumsum(Seurat_UPN23_filtered_processed_labels_melt$value)
+Seurat_UPN23_cellhashing_filtered_processed_labels_melt <- melt(table(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered_processed$labels))
+Seurat_UPN23_cellhashing_filtered_processed_labels_melt$Sample <- "UPN23_cellhashing"
+# Seurat_UPN23_cellhashing_filtered_processed_labels_melt$Cumsum <- cumsum(Seurat_UPN23_cellhashing_filtered_processed_labels_melt$value)
+Seurat_UPN29_cellhashing_filtered_processed_labels_melt <- melt(table(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered_processed$labels))
+Seurat_UPN29_cellhashing_filtered_processed_labels_melt$Sample <- "UPN29_cellahshing"
+# Seurat_UPN29_cellhashing_filtered_processed_labels_melt$Cumsum <- cumsum(Seurat_UPN29_cellhashing_filtered_processed_labels_melt$value)
+
+complete_melt <- rbind(Seurat_UPN23_filtered_processed_labels_melt, Seurat_UPN29_filtered_processed_labels_melt, 
+                       Seurat_UPN23_cellhashing_filtered_processed_labels_melt, Seurat_UPN29_cellhashing_filtered_processed_labels_melt)
+
+complete_melt_2 <- complete_melt %>% arrange(Sample, desc(value)) %>% group_by(Sample) %>% mutate(Cumsum = cumsum(value/sum(value)), percentage = value/sum(value))
+colnames(complete_melt_2) <- c("Celltype", "Nb_cell", "Sample", "Cumsum", "percentage")
+complete_melt_2$percentage <- format(complete_melt_2$percentage, digits = 3)
+
+# complete_melt$percentage <- unlist(aggregate(data = complete_melt, value ~ Sample, function(x){x/sum(x)})$value)
+
+# ggplot(complete_melt_2, aes(x = Sample, y = percentage, fill = reorder(Var1, -Cumsum))) + geom_bar(stat = "identity", position = "fill") +
+#   geom_text(aes(y = Cumsum,
+#                 label = format(percentage, digits=2)))
+ggplotly(ggplot(complete_melt_2, aes(x = Sample, y = Nb_cell, fill = Celltype)) + geom_bar(stat = "identity", position = "fill"))
+ggplot(complete_melt_2, aes(x = Sample, y = Nb_cell, fill = Celltype)) + geom_bar(stat = "identity", position = "fill")
+```
+
+```{r}
+DT::datatable(complete_melt_2[, c(1,2,3,5)],
+  extensions = "Buttons", options = list(
+    dom = "Bfrtip",
+    buttons =
+      list(list(
+        extend = "collection",
+        buttons = c("csv", "excel"),
+        text = "Download"
+      ))
+  ))
+```
+

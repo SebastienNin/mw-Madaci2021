@@ -1,0 +1,242 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Correlation between cell hashing and non cell hashing samples
+
+### Plots using mean expression of all genes
+
+For this plot, the mean expression of all genes is shown.
+
+```{r}
+# Get common genes in compared datasets
+# UPN23_UPN29_tot_genes <- list(rownames(Seurat_UPN23_filtered@assays$RNA@data),
+#                               rownames(Seurat_UPN29_filtered@assays$RNA@data),
+#                               rownames(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered@assays$RNA@data),
+#                               rownames(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered@assays$RNA@data))
+# UPN23_UPN29_genes <- Reduce(f = intersect, x = UPN23_UPN29_tot_genes)
+
+UPN23_UPN29_Seurat_list <- list(Seurat_UPN23_filtered, Seurat_UPN29_filtered, 
+                                Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, Seurat_UPN23_UPN29_cellhashing_UPN29_filtered)
+
+# UPN23_UPN29_Seurat_list_UPN23_UPN29_genes <- lapply(UPN23_UPN29_Seurat_list, subset, features = UPN23_UPN29_genes)
+
+UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized <- lapply(UPN23_UPN29_Seurat_list, normalize_seurat_object)
+
+merged_seurat <- merge(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[1]], 
+                       c(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[2]], 
+                         UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[3]], 
+                         UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[4]]), 
+                       add.cell.ids = c("UPN23", "UPN29", "UPN23_cellhashing", "UPN29_cellhashing"),
+                       merge.data = T)
+
+merged_seurat@meta.data$cell_id <- gsub(pattern = "_[ATGC].*", replacement = "",x = rownames(merged_seurat@meta.data))
+
+na_length <- rep(0, nrow(merged_seurat))
+mean_df <- data.frame(UPN23_noncellhashing = na_length, UPN29_noncellhashing = na_length,
+                      UPN23_cellhashing = na_length, UPN29_cellhashing = na_length)
+rownames(mean_df) <- rownames(merged_seurat)
+mean_df$UPN23_noncellhashing  <- rowMeans(GetAssayData(merged_seurat[, grep("UPN23_", colnames(merged_seurat))]))
+mean_df$UPN29_noncellhashing  <- rowMeans(GetAssayData(merged_seurat[, grep("UPN29_", colnames(merged_seurat))]))
+mean_df$UPN23_cellhashing  <- rowMeans(GetAssayData(merged_seurat[, grep("UPN23_cellhashing", colnames(merged_seurat))]))
+mean_df$UPN29_cellhashing  <- rowMeans(GetAssayData(merged_seurat[, grep("UPN29_cellhashing", colnames(merged_seurat))]))
+# mean_df$UPN23_noncellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[1]]@assays$RNA@data)
+# mean_df$UPN29_noncellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[2]]@assays$RNA@data)
+# mean_df$UPN23_cellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[3]]@assays$RNA@data)
+# mean_df$UPN29_cellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[4]]@assays$RNA@data)
+ggpairs(mean_df) + ggtitle("Scatter plot matrix of mean expression of all genes in all cells")
+```
+
+```{r}
+rm(merged_seurat)
+gc()
+```
+
+
+### Plots using mean expression of genes found in all samples
+
+For this plot, I subset each sample to only common genes found in all samples.
+
+```{r}
+# Get common genes in compared datasets
+UPN23_UPN29_tot_genes <- list(rownames(Seurat_UPN23_filtered@assays$RNA@data),
+                              rownames(Seurat_UPN29_filtered@assays$RNA@data),
+                              rownames(Seurat_UPN23_UPN29_cellhashing_UPN23_filtered@assays$RNA@data),
+                              rownames(Seurat_UPN23_UPN29_cellhashing_UPN29_filtered@assays$RNA@data))
+UPN23_UPN29_genes <- Reduce(f = intersect, x = UPN23_UPN29_tot_genes)
+
+UPN23_UPN29_Seurat_list <- list(Seurat_UPN23_filtered, Seurat_UPN29_filtered, 
+                                Seurat_UPN23_UPN29_cellhashing_UPN23_filtered, Seurat_UPN23_UPN29_cellhashing_UPN29_filtered)
+
+UPN23_UPN29_Seurat_list_UPN23_UPN29_genes <- lapply(UPN23_UPN29_Seurat_list, subset, features = UPN23_UPN29_genes)
+
+UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized <- lapply(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes, normalize_seurat_object)
+
+na_length <- rep(NA, length(UPN23_UPN29_genes))
+mean_df <- data.frame(UPN23_noncellhashing = na_length, UPN29_noncellhashing = na_length,
+                      UPN23_cellhashing = na_length, UPN29_cellhashing = na_length)
+mean_df$UPN23_noncellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[1]]@assays$RNA@data)
+mean_df$UPN29_noncellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[2]]@assays$RNA@data)
+mean_df$UPN23_cellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[3]]@assays$RNA@data)
+mean_df$UPN29_cellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[4]]@assays$RNA@data)
+ggpairs(mean_df) + ggtitle("Scatter plot matrix of mean expression of each gene in all cells")
+```
+
+### Plots using mean expression of highly variable genes in all samples
+
+On the following plot, We look at the correlation of expression value of the 2000 most variable genes in all samples.
+I merged the 4 Seurat object (2 non cell hashing and 2 cellhashing) using the **merge** function. Then, I normalized and find the most variable genes.
+
+```{r}
+merged_seurat <- merge(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[1]], 
+                       c(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[2]], 
+                         UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[3]], 
+                         UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[4]]), 
+                       add.cell.ids = c("UPN23", "UPN29", "UPN23_cellhashing", "UPN29_cellhashing"),
+                       merge.data = F)
+
+merged_seurat@meta.data$cell_id <- gsub(pattern = "_[ATGC].*", replacement = "",x = rownames(merged_seurat@meta.data))
+
+merged_seurat <- perform_clustering_seurat(merged_seurat)
+
+na_length <- rep(0, length(merged_seurat@assays$RNA@var.features))
+mean_df <- data.frame(UPN23_noncellhashing = na_length, UPN29_noncellhashing = na_length,
+                      UPN23_cellhashing = na_length, UPN29_cellhashing = na_length)
+rownames(mean_df) <- merged_seurat@assays$RNA@var.features
+mean_df$UPN23_noncellhashing  <- rowMeans(GetAssayData(merged_seurat[merged_seurat@assays$RNA@var.features, 
+                                                                     grep("UPN23_", colnames(merged_seurat))]))
+mean_df$UPN29_noncellhashing  <- rowMeans(GetAssayData(merged_seurat[merged_seurat@assays$RNA@var.features, 
+                                                                     grep("UPN29_", colnames(merged_seurat))]))
+mean_df$UPN23_cellhashing  <- rowMeans(GetAssayData(merged_seurat[merged_seurat@assays$RNA@var.features, 
+                                                                  grep("UPN23_cellhashing", colnames(merged_seurat))]))
+mean_df$UPN29_cellhashing  <- rowMeans(GetAssayData(merged_seurat[merged_seurat@assays$RNA@var.features, 
+                                                                  grep("UPN29_cellhashing", colnames(merged_seurat))]))
+# mean_df$UPN23_noncellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[1]]@assays$RNA@data)
+# mean_df$UPN29_noncellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[2]]@assays$RNA@data)
+# mean_df$UPN23_cellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[3]]@assays$RNA@data)
+# mean_df$UPN29_cellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[4]]@assays$RNA@data)
+ggpairs(mean_df) + ggtitle("Scatter plot matrix of mean expression of all genes in all cells")
+```
+
+```{r}
+rm(merged_seurat)
+gc()
+```
+
+
+### Plots using mean expression of highly variable genes extracted from all samples
+
+On the following plot, We look at the correlation of expression value of the 2000 most variable genes extracted from all samples.
+I retrieve the variable genes from all samples, merged the 4 seurat object and use the variable genes list to draw the correlation plot. The gene list was subset to the intersection of the 4 variable gene lists.
+
+```{r}
+UPN23_UPN29_Seurat_list_UPN23_UPN29_clustered <- lapply(X = UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized, FUN = perform_clustering_seurat)
+
+var_genes_list <- lapply(UPN23_UPN29_Seurat_list_UPN23_UPN29_clustered, function(x){print(x$RNA@var.features)})
+# var_genes_list_intersect <- Reduce(f = union, x = var_genes_list)
+var_genes_list_intersect <- Reduce(f = intersect, x = var_genes_list)
+
+merged_seurat <- merge(UPN23_UPN29_Seurat_list_UPN23_UPN29_clustered[[1]], 
+                       c(UPN23_UPN29_Seurat_list_UPN23_UPN29_clustered[[2]], 
+                         UPN23_UPN29_Seurat_list_UPN23_UPN29_clustered[[3]], 
+                         UPN23_UPN29_Seurat_list_UPN23_UPN29_clustered[[4]]), 
+                       add.cell.ids = c("UPN23", "UPN29", "UPN23_cellhashing", "UPN29_cellhashing"),
+                       merge.data = F)
+
+merged_seurat@meta.data$cell_id <- gsub(pattern = "_[ATGC].*", replacement = "",x = rownames(merged_seurat@meta.data))
+
+# merged_seurat <- perform_clustering_seurat(merged_seurat)
+```
+
+Using this method, we retrieve `r length(var_genes_list_intersect)` genes which are in the union of variable genes between the 4 samples. After computing the mean expression between each sample, we can draw the following plot.
+
+```{r}
+na_length <- rep(0, length(var_genes_list_intersect))
+mean_df <- data.frame(UPN23_noncellhashing = na_length, UPN29_noncellhashing = na_length,
+                      UPN23_cellhashing = na_length, UPN29_cellhashing = na_length)
+rownames(mean_df) <- var_genes_list_intersect
+mean_df$UPN23_noncellhashing  <- rowMeans(GetAssayData(merged_seurat[var_genes_list_intersect, 
+                                                                     grep("UPN23_", colnames(merged_seurat))]))
+mean_df$UPN29_noncellhashing  <- rowMeans(GetAssayData(merged_seurat[var_genes_list_intersect, 
+                                                                     grep("UPN29_", colnames(merged_seurat))]))
+mean_df$UPN23_cellhashing  <- rowMeans(GetAssayData(merged_seurat[var_genes_list_intersect, 
+                                                                  grep("UPN23_cellhashing", colnames(merged_seurat))]))
+mean_df$UPN29_cellhashing  <- rowMeans(GetAssayData(merged_seurat[var_genes_list_intersect, 
+                                                                  grep("UPN29_cellhashing", colnames(merged_seurat))]))
+# mean_df$UPN23_noncellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[1]]@assays$RNA@data)
+# mean_df$UPN29_noncellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[2]]@assays$RNA@data)
+# mean_df$UPN23_cellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[3]]@assays$RNA@data)
+# mean_df$UPN29_cellhashing <- rowMeans(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[4]]@assays$RNA@data)
+ggpairs(mean_df) + ggtitle("Scatter plot matrix of mean expression of all genes in all cells")
+```
+
+We can draw the venn diagramm of all variable genes found in the 4 samples to better see what happened.
+
+```{r}
+names(var_genes_list) <- c("UPN23", "UPN29", "UPN23_cellhashing", "UPN29_cellhashing")
+
+display_venn(
+  x = var_genes_list,
+  category.names = c("UPN23", "UPN29", "UPN23_cellhashing", "UPN29_cellhashing"),
+  # Cercles
+  lwd = 2,
+  lty = 'blank',
+  fill = c("grey", "#E69F00", "#999999", "orange"),
+  # Nombres
+  cex = .9,
+  fontface = "italic",
+  # Noms des groupes
+  cat.cex = 1,
+  cat.fontface = "bold",
+  cat.default.pos = "outer",
+  cat.dist = c(0.055, 0.055, 0.055, 0.055)
+)
+```
+
+#### Table of all variable genes
+
+Here is a table of the 2000 variable genes found in each sample
+
+```{r}
+datatable(as.data.frame(var_genes_list))
+```
+
+#### Table of common variable genes
+
+Here is a table of the `r length(var_genes_list_intersect)` variable genes found common in all sample.
+
+```{r}
+datatable(as.data.frame(var_genes_list_intersect))
+```
+
+<!-- ### Plots using random cells -->
+
+<!-- For the following plots, I chose random cells to draw gene expression. -->
+
+<!-- ```{r} -->
+<!-- # Generate 10 random number between 1 and the min number of cell in compared datasets -->
+<!-- for(random in sample(1:min(sapply(UPN23_UPN29_Seurat_list, ncol)), 10)){ -->
+<!--   na_length <- rep(NA, length(UPN23_UPN29_genes)) -->
+<!--   loop_df <- data.frame(UPN23_noncellhashing = na_length, UPN29_noncellhashing = na_length, -->
+<!--                         UPN23_cellhashing = na_length, UPN29_cellhashing = na_length, row.names = UPN23_UPN29_genes) -->
+<!--   loop_df$UPN23_noncellhashing <- UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[1]]@assays$RNA@data[, random] -->
+<!--   loop_df$UPN29_noncellhashing <- UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[2]]@assays$RNA@data[, random] -->
+<!--   loop_df$UPN23_cellhashing <- UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[3]]@assays$RNA@data[, random] -->
+<!--   loop_df$UPN29_cellhashing <- UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized[[4]]@assays$RNA@data[, random] -->
+<!--   print(ggpairs(loop_df) + ggtitle("Scatter plot matrix of expression of each gene randomly selected cells")) -->
+<!-- } -->
+<!-- ``` -->
+
+```{r}
+#Clean memory
+rm(UPN23_UPN29_Seurat_list_UPN23_UPN29_genes_normalized,
+   UPN23_UPN29_Seurat_list_UPN23_UPN29_genes,
+   UPN23_UPN29_Seurat_list, merged_seurat)
+rm(mean_df, UPN23_UPN29_Seurat_list_UPN23_UPN29_clustered)
+rm(var_genes_list_intersect, var_genes_list)
+# rm(Seurat_UPN23_UPN29_cellhashing, Seurat_UPN23_UPN29_cellhashing_UPN23, Seurat_UPN23_UPN29_cellhashing_UPN29)
+rm(UPN23, UPN29, UPN23_UPN29_cellhashing)
+gc()
+```
