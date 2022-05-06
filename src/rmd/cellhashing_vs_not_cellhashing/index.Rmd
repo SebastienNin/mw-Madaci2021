@@ -171,6 +171,15 @@ draw_QC_plot_seurat_with_boxplot <- function(seurat_obj, feature_to_plot){
   return(qc_plot_with_boxplot)
 }
 
+compute_quantiles <- function(seurat_obj){
+  quantiles_nUMI <- quantile(seurat_obj@meta.data$nCount_RNA)[2:4]
+  quantiles_nGene <- quantile(seurat_obj@meta.data$nFeature_RNA)[2:4]
+  quantiles_percent_mito <- quantile(seurat_obj@meta.data$percent_mito)[2:4]
+  quantile_df <- data.frame(nUMI = quantiles_nUMI, nGene = quantiles_nGene, percent_mito = quantiles_percent_mito)
+  rownames(quantile_df) <- c("First quartile", "Median", "Third quartile")
+  DT::datatable(quantile_df)
+}
+
 ggviolin_color_outlier <- function(seurat_obj, column_for_points, column_for_color, title = "Violin plot"){
   ggplot(seurat_obj@meta.data, aes(x = orig.ident, y = column_for_points)) + 
     geom_violin(aes(fill = orig.ident)) + 

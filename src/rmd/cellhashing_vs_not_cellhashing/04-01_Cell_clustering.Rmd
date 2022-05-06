@@ -19,7 +19,6 @@ Seurat_object_list <- list(Seurat_UPN23_filtered, Seurat_UPN29_filtered,
 gc()
 ```
 
-
 ```{r}
 Seurat_object_list_clustered <- lapply(Seurat_object_list, perform_clustering_seurat)
 DE_results_list <- lapply(Seurat_object_list_clustered, perform_DE_seurat)

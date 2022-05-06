@@ -10,7 +10,8 @@ In order to detect celltypes in all datasets, I used the [celldex](http://biocon
 #### UPN23
 
 ```{r}
-hpca.se <- HumanPrimaryCellAtlasData()
+# hpca.se <- HumanPrimaryCellAtlasData()
+hpca.se <- celldex::DatabaseImmuneCellExpressionData()
 hpca.se
 
 ## -----------------------------------------------------------------------------
