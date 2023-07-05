@@ -151,6 +151,17 @@ saveRDS(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed, file = "../../.
 saveRDS(Seurat_UPN78_filtered_processed, file = "../../../out/fixed_vs_not_fixed/R_obj/UPN78_obj_processed.rds")
 saveRDS(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed, file = "../../../out/fixed_vs_not_fixed/R_obj/UPN73_cellhashing_obj_processed.rds")
 saveRDS(Seurat_UPN73_filtered_processed, file = "../../../out/fixed_vs_not_fixed/R_obj/UPN73_obj_processed.rds")
+
+# Write normalized tables
+dir.create("../../../out/tables, showWarnings = FALSE)
+write.table(as.matrix(GetAssayData(Seurat_UPN73_UPN78_cellhashing_UPN78_filtered_processed, slot = "data")), 
+            '../../../out/tables/UPN78_cellhashing_normalized_table.csv')
+write.table(as.matrix(GetAssayData(Seurat_UPN78_filtered_processed, slot = "data")), 
+            '../../../out/tables/UPN78_normalized_table.csv')
+write.table(as.matrix(GetAssayData(Seurat_UPN73_UPN78_cellhashing_UPN73_filtered_processed, slot = "data")), 
+            '../../../out/tables/UPN73_cellhashing_normalized_table.csv')
+write.table(as.matrix(GetAssayData(Seurat_UPN73_filtered_processed, slot = "data")), 
+            '../../../out/tables/UPN73_normalized_table.csv')
 ```
 
 ```{r}
